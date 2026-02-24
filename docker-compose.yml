@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  # Database Relazionale: Auth Service (Utenti, Password Hash)
+  postgres:
+    image: postgres:15-alpine
+    ports:
+      - "15432:5432"
+    environment:
+      POSTGRES_USER: auth_user
+      POSTGRES_PASSWORD: auth_password
+      POSTGRES_DB: auth_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U auth_user -d auth_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Coda / Memory Cache: Auth Service (Signing Secrets) + Event Service (Event Queue)
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: ["redis-server", "--appendonly", "yes"]
+
+  # Database a Grafo: Event Service (Utenti, Pagine, Relazioni VISITED)
+  neo4j:
+    image: neo4j:5
+    ports:
+      - "7474:7474"  # browser UI (http://localhost:7474)
+      - "7687:7687"  # bolt protocol
+    environment:
+      NEO4J_AUTH: neo4j/password123
+    volumes:
+      - neo4j_data:/data
+
+volumes:
+  postgres_data:
+  redis_data:
+  neo4j_data:
