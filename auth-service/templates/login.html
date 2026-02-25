@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="it">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>LinkedIn Co-pilot — Accedi</title>
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --bg: #0a0e1a;
+            --surface: #111827;
+            --surface2: #1a2236;
+            --border: rgba(255, 255, 255, .08);
+            --primary: #3b82f6;
+            --primary-h: #2563eb;
+            --accent: #0ea5e9;
+            --li: #0077b5;
+            --li-h: #005e8f;
+            --text: #f1f5f9;
+            --muted: #64748b;
+            --error: #f87171;
+            --success: #4ade80;
+            --r-sm: 6px;
+            --r-md: 12px;
+            --r-lg: 20px;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+            background-image: radial-gradient(ellipse 80% 60% at 50% -10%, rgba(59, 130, 246, .18) 0%, transparent 70%);
+        }
+
+        .card {
+            width: 100%;
+            max-width: 440px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--r-lg);
+            padding: 2.5rem 2rem;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, .5);
+            animation: up .4s ease both;
+        }
+
+        @keyframes up {
+            from {
+                opacity: 0;
+                transform: translateY(20px)
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0)
+            }
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: .6rem;
+            margin-bottom: 2rem;
+        }
+
+        .logo-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: var(--r-sm);
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .logo-text {
+            font-size: 1.1rem;
+            font-weight: 700;
+            letter-spacing: -.02em;
+        }
+
+        .logo-text span {
+            color: var(--primary);
+        }
+
+        .tabs {
+            display: flex;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: var(--r-sm);
+            padding: 3px;
+            margin-bottom: 2rem;
+        }
+
+        .tab {
+            flex: 1;
+            padding: .55rem;
+            border: none;
+            border-radius: calc(var(--r-sm) - 2px);
+            background: transparent;
+            color: var(--muted);
+            font-size: .875rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all .2s;
+        }
+
+        .tab.active {
+            background: var(--surface);
+            color: var(--text);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, .3);
+        }
+
+        h1 {
+            font-size: 1.6rem;
+            font-weight: 700;
+            letter-spacing: -.03em;
+            margin-bottom: .4rem;
+            line-height: 1.2;
+        }
+
+        .sub {
+            color: var(--muted);
+            font-size: .9rem;
+            margin-bottom: 2rem;
+            line-height: 1.5;
+        }
+
+        .plugin-hint {
+            background: rgba(74, 222, 128, .1);
+            border: 1px solid rgba(74, 222, 128, .3);
+            color: var(--success);
+            padding: .75rem 1rem;
+            border-radius: var(--r-sm);
+            font-size: .82rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .field {
+            display: flex;
+            flex-direction: column;
+            gap: .4rem;
+            margin-bottom: 1rem;
+        }
+
+        label {
+            font-size: .8rem;
+            font-weight: 600;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: .05em;
+        }
+
+        input {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: var(--r-sm);
+            padding: .75rem 1rem;
+            font-size: .95rem;
+            color: var(--text);
+            outline: none;
+            transition: border-color .2s, box-shadow .2s;
+            width: 100%;
+        }
+
+        input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, .15);
+        }
+
+        input::placeholder {
+            color: var(--muted);
+        }
+
+        .btn {
+            width: 100%;
+            padding: .85rem 1.5rem;
+            border: none;
+            border-radius: var(--r-sm);
+            font-size: .95rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: .6rem;
+            transition: all .2s;
+            letter-spacing: -.01em;
+        }
+
+        .btn:disabled {
+            opacity: .55;
+            cursor: not-allowed;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            color: #fff;
+            box-shadow: 0 4px 20px rgba(59, 130, 246, .3);
+            margin-bottom: 1rem;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            box-shadow: 0 6px 28px rgba(59, 130, 246, .45);
+            transform: translateY(-1px);
+        }
+
+        .btn-li {
+            background: var(--li);
+            color: #fff;
+            box-shadow: 0 4px 20px rgba(0, 119, 181, .3);
+        }
+
+        .btn-li:hover {
+            background: var(--li-h);
+            box-shadow: 0 6px 28px rgba(0, 119, 181, .45);
+            transform: translateY(-1px);
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            gap: .75rem;
+            margin: 1.5rem 0;
+            color: var(--muted);
+            font-size: .8rem;
+        }
+
+        .divider::before,
+        .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border);
+        }
+
+        .alert {
+            padding: .75rem 1rem;
+            border-radius: var(--r-sm);
+            font-size: .875rem;
+            margin-bottom: 1rem;
+        }
+
+        .alert-error {
+            background: rgba(248, 113, 113, .1);
+            border: 1px solid rgba(248, 113, 113, .3);
+            color: var(--error);
+        }
+
+        .alert-success {
+            background: rgba(74, 222, 128, .1);
+            border: 1px solid rgba(74, 222, 128, .3);
+            color: var(--success);
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 1.5rem;
+            font-size: .8rem;
+            color: var(--muted);
+        }
+
+        .footer a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        .spinner {
+            width: 18px;
+            height: 18px;
+            border: 2px solid rgba(255, 255, 255, .3);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin .7s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg)
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="card">
+        <div class="logo">
+            <div class="logo-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                    <path d="M12 2L2 7l10 5 10-5-10-5z" fill="white" opacity=".9" />
+                    <path d="M2 17l10 5 10-5M2 12l10 5 10-5" stroke="white" stroke-width="2" stroke-linecap="round" />
+                </svg>
+            </div>
+            <span class="logo-text">LinkedIn <span>Co-pilot</span></span>
+        </div>
+
+        {{if eq .Source "plugin"}}
+        <div class="plugin-hint">🔌 Accedi per sbloccare le funzionalità del plugin su LinkedIn.</div>
+        {{end}}
+
+        <div class="tabs">
+            <button class="tab active" id="tabLogin" onclick="switchTab('login')">Accedi</button>
+            <button class="tab" id="tabRegister" onclick="switchTab('register')">Registrati</button>
+        </div>
+
+        <h1 id="heading">Bentornato 👋</h1>
+        <p class="sub" id="subtext">{{if eq .Source "plugin"}}Accedi per sbloccare il plugin.{{else}}Accedi alla tua
+            dashboard.{{end}}</p>
+
+        <div id="alertBox" style="display:none"></div>
+
+        <form id="authForm" onsubmit="handleSubmit(event)">
+            <div class="field">
+                <label for="email">Email</label>
+                <input id="email" type="email" placeholder="tu@esempio.com" required autocomplete="email">
+            </div>
+            <div class="field">
+                <label for="password">Password</label>
+                <input id="password" type="password" placeholder="••••••••" required minlength="6"
+                    autocomplete="current-password">
+            </div>
+            <button type="submit" class="btn btn-primary" id="submitBtn">Accedi</button>
+        </form>
+
+        <div class="divider">oppure</div>
+
+        <a href="/auth/linkedin/login?source={{.Source}}&ext={{.Ext}}" style="text-decoration:none">
+            <button class="btn btn-li" type="button">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
+                    <path
+                        d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" />
+                </svg>
+                Accedi con LinkedIn
+            </button>
+        </a>
+
+        <div class="footer">Usando il servizio accetti i nostri <a href="#">Termini</a> e la <a href="#">Privacy
+                Policy</a>.</div>
+    </div>
+
+    <script>
+        const SOURCE = "{{.Source}}";
+        const EXT = "{{.Ext}}";
+        const DASHBOARD_URL = "{{.DashboardURL}}";
+        let currentTab = "login";
+
+        function switchTab(tab) {
+            currentTab = tab;
+            document.getElementById("tabLogin").classList.toggle("active", tab === "login");
+            document.getElementById("tabRegister").classList.toggle("active", tab === "register");
+            document.getElementById("heading").textContent = tab === "login" ? "Bentornato 👋" : "Crea un account";
+            document.getElementById("subtext").textContent = tab === "login"
+                ? (SOURCE === "plugin" ? "Accedi per sbloccare il plugin." : "Accedi alla tua dashboard.")
+                : "Registrati gratuitamente.";
+            document.getElementById("submitBtn").textContent = tab === "login" ? "Accedi" : "Crea account";
+            document.getElementById("password").autocomplete = tab === "login" ? "current-password" : "new-password";
+            clearAlert();
+        }
+
+        function showAlert(msg, type) {
+            const el = document.getElementById("alertBox");
+            el.className = "alert alert-" + type;
+            el.textContent = msg;
+            el.style.display = "block";
+        }
+        function clearAlert() { document.getElementById("alertBox").style.display = "none"; }
+
+        async function handleSubmit(e) {
+            e.preventDefault();
+            clearAlert();
+            const btn = document.getElementById("submitBtn");
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner"></span>' + (currentTab === "login" ? " Accesso…" : " Registrazione…");
+
+            const email = document.getElementById("email").value;
+            const password = document.getElementById("password").value;
+            const endpoint = currentTab === "login" ? "/login" : "/register";
+
+            try {
+                const res = await fetch(endpoint, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    credentials: "include",
+                    body: JSON.stringify({ email, password }),
+                });
+                const data = await res.json();
+
+                if (!res.ok) {
+                    showAlert(data.error || "Errore sconosciuto. Riprova.", "error");
+                    return;
+                }
+
+                if (currentTab === "register") {
+                    showAlert("Account creato! Ora fai il login.", "success");
+                    switchTab("login");
+                    document.getElementById("password").value = "";
+                    return;
+                }
+
+                // Login ok — biforca in base a source
+                if (SOURCE === "plugin" && EXT && typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.sendMessage) {
+                    chrome.runtime.sendMessage(EXT, { action: "LOGIN_SUCCESS", jwt: data.token, secret: data.signing_secret }, (r) => {
+                        showAlert("✅ Plugin sbloccato! Puoi chiudere questa scheda.", "success");
+                        setTimeout(() => window.close(), 2500);
+                    });
+                } else {
+                    window.location.href = DASHBOARD_URL + "/dashboard";
+                }
+            } catch (err) {
+                showAlert("Impossibile contattare il server. Assicurati che l'Auth Service sia avviato.", "error");
+            } finally {
+                btn.disabled = false;
+                btn.textContent = currentTab === "login" ? "Accedi" : "Crea account";
+            }
+        }
+    </script>
+</body>
+
+</html>

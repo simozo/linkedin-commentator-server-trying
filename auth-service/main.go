@@ -30,13 +30,27 @@ func main() {
 	app := fiber.New()
 	app.Use(logger.New())
 	app.Use(cors.New(cors.Config{
-		AllowOrigins: "*",
-		AllowHeaders: "Origin, Content-Type, Accept, Authorization",
+		AllowOrigins:     "http://localhost:3000,http://localhost:3003,http://localhost:4000",
+		AllowHeaders:     "Origin, Content-Type, Accept, Authorization",
+		AllowMethods:     "GET,POST,OPTIONS",
+		AllowCredentials: true,
 	}))
 
-	// Routes
+	// Routes — HTML Pages (served by Fiber templates)
+	app.Get("/login", handlers.LoginPage)
+	app.Get("/auth/callback", handlers.AuthCallbackPage)
+
+	// Routes — Email/Password API
 	app.Post("/register", handlers.Register)
 	app.Post("/login", handlers.Login)
+
+	// Routes — LinkedIn OAuth2
+	app.Get("/auth/linkedin/login", handlers.LinkedInInit)
+	app.Get("/auth/linkedin/callback", handlers.LinkedInCallback)
+
+	// Routes — Session / Dashboard
+	app.Get("/me", handlers.Me)
+	app.Post("/logout-web", handlers.LogoutWeb)
 
 	// Start server
 	port := os.Getenv("PORT")

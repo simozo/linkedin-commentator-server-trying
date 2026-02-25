@@ -1,17 +1,10 @@
 package handlers
 
 import (
-	"crypto/rand"
-	"encoding/hex"
-	"fmt"
-	"os"
-	"time"
-
 	"auth-service/database"
 	"auth-service/models"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -31,9 +24,11 @@ func Register(c *fiber.Ctx) error {
 		return c.Status(500).JSON(fiber.Map{"error": "Failed to hash password"})
 	}
 
+	hashed := string(hashedPassword)
 	user := models.User{
-		Email:    req.Email,
-		Password: string(hashedPassword),
+		Email:        req.Email,
+		Password:     &hashed,
+		AuthProvider: "local",
 	}
 
 	if err := database.DB.Create(&user).Error; err != nil {
@@ -54,50 +49,27 @@ func Login(c *fiber.Ctx) error {
 		return c.Status(401).JSON(fiber.Map{"error": "Invalid credentials"})
 	}
 
-	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.Password)); err != nil {
+	if user.Password == nil {
+		return c.Status(401).JSON(fiber.Map{"error": "This account uses LinkedIn login. Please sign in with LinkedIn."})
+	}
+
+	if err := bcrypt.CompareHashAndPassword([]byte(*user.Password), []byte(req.Password)); err != nil {
 		return c.Status(401).JSON(fiber.Map{"error": "Invalid credentials"})
 	}
 
-	// Generate JWT using RS256
-	ttl := 24 * time.Hour
-	claims := jwt.MapClaims{
-		"user_id": user.ID,
-		"exp":     time.Now().Add(ttl).Unix(),
+	// Always create a web session cookie
+	if err := createWebSession(user.ID, c); err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Failed to create session"})
 	}
 
-	token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
-
-	privateKeyBytes, err := os.ReadFile("private.pem")
+	// Also return JWT + HMAC secret for the plugin (used when source=plugin)
+	jwtToken, signingSecret, err := generateSessionTokens(user.ID)
 	if err != nil {
-		return c.Status(500).JSON(fiber.Map{"error": "Could not read private key"})
-	}
-
-	privateKey, err := jwt.ParseRSAPrivateKeyFromPEM(privateKeyBytes)
-	if err != nil {
-		return c.Status(500).JSON(fiber.Map{"error": "Could not parse private key"})
-	}
-
-	t, err := token.SignedString(privateKey)
-	if err != nil {
-		return c.Status(500).JSON(fiber.Map{"error": "Could not login"})
-	}
-
-	// Generate Signing Secret for Plugin
-	bytes := make([]byte, 32)
-	if _, err := rand.Read(bytes); err != nil {
-		return c.Status(500).JSON(fiber.Map{"error": "Failed to generate signing secret"})
-	}
-	signingSecret := hex.EncodeToString(bytes)
-
-	// Save signing secret in Redis with TTL identical to JWT
-	ctx := database.Ctx
-	err = database.RedisClient.Set(ctx, "secret:"+fmt.Sprint(user.ID), signingSecret, ttl).Err()
-	if err != nil {
-		return c.Status(500).JSON(fiber.Map{"error": "Failed to store session secret"})
+		return c.Status(500).JSON(fiber.Map{"error": err.Error()})
 	}
 
 	return c.JSON(fiber.Map{
-		"token":          t,
+		"token":          jwtToken,
 		"signing_secret": signingSecret,
 	})
 }

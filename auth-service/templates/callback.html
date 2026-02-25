@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="it">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>LinkedIn Co-pilot — Autenticazione</title>
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --bg: #0a0e1a;
+            --surface: #111827;
+            --border: rgba(255, 255, 255, .08);
+            --primary: #3b82f6;
+            --accent: #0ea5e9;
+            --text: #f1f5f9;
+            --muted: #64748b;
+            --error: #f87171;
+            --success: #4ade80;
+            --r-lg: 20px;
+            --r-sm: 6px;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+            background-image: radial-gradient(ellipse 80% 60% at 50% -10%, rgba(59, 130, 246, .18) 0%, transparent 70%);
+        }
+
+        .card {
+            width: 100%;
+            max-width: 440px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--r-lg);
+            padding: 2.5rem 2rem;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, .5);
+            text-align: center;
+            animation: up .4s ease both;
+        }
+
+        @keyframes up {
+            from {
+                opacity: 0;
+                transform: translateY(20px)
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0)
+            }
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: .6rem;
+            margin-bottom: 2rem;
+        }
+
+        .logo-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: var(--r-sm);
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .logo-text {
+            font-size: 1.1rem;
+            font-weight: 700;
+            letter-spacing: -.02em;
+        }
+
+        .logo-text span {
+            color: var(--primary);
+        }
+
+        .icon-circle {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem;
+            font-size: 1.8rem;
+        }
+
+        .icon-circle.ok {
+            background: rgba(74, 222, 128, .12);
+            border: 1px solid rgba(74, 222, 128, .3);
+        }
+
+        .icon-circle.err {
+            background: rgba(248, 113, 113, .12);
+            border: 1px solid rgba(248, 113, 113, .3);
+        }
+
+        h1 {
+            font-size: 1.4rem;
+            font-weight: 700;
+            letter-spacing: -.03em;
+            margin-bottom: .5rem;
+        }
+
+        p {
+            color: var(--muted);
+            font-size: .9rem;
+            line-height: 1.6;
+            margin-top: .5rem;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(255, 255, 255, .2);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin .7s linear infinite;
+            margin: 0 auto 1.5rem;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg)
+            }
+        }
+
+        .btn {
+            display: inline-block;
+            margin-top: 1.5rem;
+            padding: .75rem 1.75rem;
+            border: none;
+            border-radius: var(--r-sm);
+            font-size: .95rem;
+            font-weight: 600;
+            cursor: pointer;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            color: #fff;
+            transition: all .2s;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, .4);
+        }
+
+        .note {
+            font-size: .78rem;
+            color: var(--muted);
+            margin-top: 1rem;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="card">
+        <div class="logo">
+            <div class="logo-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                    <path d="M12 2L2 7l10 5 10-5-10-5z" fill="white" opacity=".9" />
+                    <path d="M2 17l10 5 10-5M2 12l10 5 10-5" stroke="white" stroke-width="2" stroke-linecap="round" />
+                </svg>
+            </div>
+            <span class="logo-text">LinkedIn <span>Co-pilot</span></span>
+        </div>
+
+        <div id="loadingState">
+            <div class="spinner"></div>
+            <h1>Autenticazione…</h1>
+            <p>Completamento accesso in corso.</p>
+        </div>
+
+        <div id="successState" style="display:none">
+            <div class="icon-circle ok">✓</div>
+            <h1 id="successTitle">Sei dentro! 🎉</h1>
+            <p id="successMsg"></p>
+            <p class="note" id="successNote"></p>
+        </div>
+
+        <div id="errorState" style="display:none">
+            <div class="icon-circle err">✕</div>
+            <h1>Qualcosa è andato storto</h1>
+            <p id="errorMsg"></p>
+            <button class="btn" onclick="window.location.href='/login'">Torna al login</button>
+        </div>
+    </div>
+
+    <script>
+        const SOURCE = "{{.Source}}";
+        const EXT = "{{.Ext}}";
+        const DASHBOARD_URL = "{{.DashboardURL}}";
+
+        const params = new URLSearchParams(window.location.search);
+        const token = params.get("token");
+        const secret = params.get("secret");
+        const source = params.get("source") || SOURCE;
+        const ext = params.get("ext") || EXT;
+
+        function show(id) {
+            ["loadingState", "successState", "errorState"].forEach(s => {
+                document.getElementById(s).style.display = s === id ? "block" : "none";
+            });
+        }
+
+        function showError(msg) {
+            document.getElementById("errorMsg").textContent = msg;
+            show("errorState");
+        }
+
+        function showSuccess(title, msg, note) {
+            document.getElementById("successTitle").textContent = title;
+            document.getElementById("successMsg").textContent = msg;
+            document.getElementById("successNote").textContent = note || "";
+            show("successState");
+        }
+
+        // Dashboard flow: no token in URL, session cookie already set — redirect to dashboard
+        if (source !== "plugin" && !token) {
+            showSuccess("Accesso effettuato!", "Reindirizzamento alla dashboard…", "");
+            setTimeout(() => { window.location.href = DASHBOARD_URL + "/dashboard"; }, 800);
+        }
+        // Plugin flow: token + secret must be present
+        else if (source === "plugin" && token && secret) {
+            if (!ext) {
+                showError("Extension ID mancante. Riprova ad accedere dal plugin.");
+            } else if (typeof chrome === "undefined" || !chrome.runtime || !chrome.runtime.sendMessage) {
+                showError("API Chrome non disponibile. Apri questa pagina dal browser con il plugin installato.");
+            } else {
+                chrome.runtime.sendMessage(ext, { action: "LOGIN_SUCCESS", jwt: token, secret: secret }, (response) => {
+                    if (chrome.runtime.lastError) {
+                        showError("Impossibile comunicare con il plugin: " + chrome.runtime.lastError.message + ". Assicurati che il plugin sia installato e che il dominio sia in externally_connectable.");
+                    } else {
+                        showSuccess("Plugin sbloccato! 🎉", "Puoi chiudere questa scheda e tornare su LinkedIn.", "Questa finestra si chiuderà automaticamente tra 3 secondi…");
+                        setTimeout(() => window.close(), 3000);
+                    }
+                });
+            }
+        } else {
+            showError("Parametri mancanti nel callback. Riprova il login.");
+        }
+    </script>
+</body>
+
+</html>
