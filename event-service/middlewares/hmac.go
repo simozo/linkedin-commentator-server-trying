@@ -32,9 +32,15 @@ func HMACProtected() fiber.Handler {
 			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Session expired or invalid"})
 		}
 
+		// Decode the hex secret to raw bytes (matches the JS client behaviour)
+		rawKey, err := hex.DecodeString(secretKey)
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Internal server error: invalid signing secret format"})
+		}
+
 		// Calculate HMAC
 		body := c.Body()
-		mac := hmac.New(sha256.New, []byte(secretKey))
+		mac := hmac.New(sha256.New, rawKey)
 		mac.Write(body)
 		expectedMAC := hex.EncodeToString(mac.Sum(nil))
 

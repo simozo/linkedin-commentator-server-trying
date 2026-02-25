@@ -11,11 +11,18 @@ import (
 )
 
 type Event struct {
-	UserID    string    `json:"user_id"`
-	URL       string    `json:"url"`
-	Title     string    `json:"title"`
-	Action    string    `json:"action"`
-	CreatedAt time.Time `json:"created_at"`
+	UserID          string    `json:"user_id"`
+	PostUrn         string    `json:"post_urn"`
+	URL             string    `json:"url"`
+	Action          string    `json:"action"`
+	AuthorName      string    `json:"author_name"`
+	AuthorSlug      string    `json:"author_slug"`
+	AuthorDegree    string    `json:"author_degree"`
+	PostText        string    `json:"post_text"`
+	InteractionType string    `json:"interaction_type"`
+	InteractorName  string    `json:"interactor_name"`
+	InteractorSlug  string    `json:"interactor_slug"`
+	Timestamp       time.Time `json:"timestamp"`
 }
 
 func ReceiveEvent(c *fiber.Ctx) error {
@@ -25,14 +32,16 @@ func ReceiveEvent(c *fiber.Ctx) error {
 	}
 
 	// Validate required fields
-	if event.URL == "" || event.Title == "" || event.Action == "" {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Missing required fields (url, title, action)"})
+	if event.PostUrn == "" || event.Action == "" || event.AuthorSlug == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Missing required fields (post_urn, action, author_slug)"})
 	}
 
 	// Inject the authenticated User ID explicitly from Context (to avoid payload tampering)
 	userID := c.Locals("user_id")
 	event.UserID = fmt.Sprintf("%.0f", userID.(float64))
-	event.CreatedAt = time.Now()
+	if event.Timestamp.IsZero() {
+		event.Timestamp = time.Now()
+	}
 
 	// Serialize the sanitized event and push to Redis queue
 	data, err := json.Marshal(event)
