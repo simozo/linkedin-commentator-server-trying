@@ -45,7 +45,7 @@ func main() {
 	// Listen su Porta Assegnata
 	port := os.Getenv("PORT")
 	if port == "" {
-		port = "3000"
+		port = "3100"
 	}
 	log.Fatal(app.Listen(":" + port))
 }

@@ -10,19 +10,26 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
+type CoCommenter struct {
+	Name           string `json:"name"`
+	Slug           string `json:"slug"`
+	CommentSnippet string `json:"comment_snippet"`
+}
+
 type Event struct {
-	UserID          string    `json:"user_id"`
-	PostUrn         string    `json:"post_urn"`
-	URL             string    `json:"url"`
-	Action          string    `json:"action"`
-	AuthorName      string    `json:"author_name"`
-	AuthorSlug      string    `json:"author_slug"`
-	AuthorDegree    string    `json:"author_degree"`
-	PostText        string    `json:"post_text"`
-	InteractionType string    `json:"interaction_type"`
-	InteractorName  string    `json:"interactor_name"`
-	InteractorSlug  string    `json:"interactor_slug"`
-	Timestamp       time.Time `json:"timestamp"`
+	UserID          string        `json:"user_id"`
+	PostUrn         string        `json:"post_urn"`
+	URL             string        `json:"url"`
+	Action          string        `json:"action"`
+	AuthorName      string        `json:"author_name"`
+	AuthorSlug      string        `json:"author_slug"`
+	AuthorDegree    string        `json:"author_degree"`
+	PostText        string        `json:"post_text"`
+	InteractionType string        `json:"interaction_type"`
+	InteractorName  string        `json:"interactor_name"`
+	InteractorSlug  string        `json:"interactor_slug"`
+	CoCommenters    []CoCommenter `json:"co_commenters"`
+	Timestamp       time.Time     `json:"timestamp"`
 }
 
 func ReceiveEvent(c *fiber.Ctx) error {

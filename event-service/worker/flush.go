@@ -11,20 +11,26 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 )
 
-// Event is identical to the one in handlers (you might want to put this in a shared definitions package later)
+type CoCommenter struct {
+	Name           string `json:"name"`
+	Slug           string `json:"slug"`
+	CommentSnippet string `json:"comment_snippet"`
+}
+
 type Event struct {
-	UserID          string    `json:"user_id"`
-	PostUrn         string    `json:"post_urn"`
-	URL             string    `json:"url"`
-	Action          string    `json:"action"`
-	AuthorName      string    `json:"author_name"`
-	AuthorSlug      string    `json:"author_slug"`
-	AuthorDegree    string    `json:"author_degree"`
-	PostText        string    `json:"post_text"`
-	InteractionType string    `json:"interaction_type"`
-	InteractorName  string    `json:"interactor_name"`
-	InteractorSlug  string    `json:"interactor_slug"`
-	Timestamp       time.Time `json:"timestamp"`
+	UserID          string        `json:"user_id"`
+	PostUrn         string        `json:"post_urn"`
+	URL             string        `json:"url"`
+	Action          string        `json:"action"`
+	AuthorName      string        `json:"author_name"`
+	AuthorSlug      string        `json:"author_slug"`
+	AuthorDegree    string        `json:"author_degree"`
+	PostText        string        `json:"post_text"`
+	InteractionType string        `json:"interaction_type"`
+	InteractorName  string        `json:"interactor_name"`
+	InteractorSlug  string        `json:"interactor_slug"`
+	CoCommenters    []CoCommenter `json:"co_commenters"`
+	Timestamp       time.Time     `json:"timestamp"`
 }
 
 func StartFlush() {
@@ -107,6 +113,32 @@ func writeToNeo4j(events []Event) {
 
 			if _, err := tx.Run(ctx, query, params); err != nil {
 				log.Printf("Failed to write to neo4j: %v\n", err)
+			}
+
+			// Write co-commenters as separate Cypher statements (one per person)
+			// This creates Person nodes with :COMMENTED_ON edges for the Warm Reach Map bridge traversal
+			for _, cc := range e.CoCommenters {
+				if cc.Slug == "" {
+					continue
+				}
+				ccQuery := `
+				MERGE (cc:Person {slug: $ccSlug})
+				  ON CREATE SET cc.name = $ccName
+				  ON MATCH SET cc.name = CASE WHEN $ccName <> '' THEN $ccName ELSE cc.name END
+				MERGE (p:Post {urn: $postUrn})
+				MERGE (cc)-[r:COMMENTED_ON]->(p)
+				  ON CREATE SET r.snippet = $ccSnippet, r.first_seen = $ccTs
+				`
+				ccParams := map[string]any{
+					"ccSlug":    cc.Slug,
+					"ccName":    cc.Name,
+					"postUrn":   e.PostUrn,
+					"ccSnippet": cc.CommentSnippet,
+					"ccTs":      e.Timestamp.Format(time.RFC3339),
+				}
+				if _, err := tx.Run(ctx, ccQuery, ccParams); err != nil {
+					log.Printf("Failed to write co-commenter %s: %v\n", cc.Slug, err)
+				}
 			}
 		}
 		return nil, nil
