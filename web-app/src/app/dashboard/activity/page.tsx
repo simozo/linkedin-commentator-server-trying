@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import DashboardNav from "../components/DashboardNav";
+import styles from "../dashboard.module.css";
 
 const AUTH_URL = process.env.NEXT_PUBLIC_AUTH_URL || "http://localhost:4000";
 const AUTH_LOGIN_URL = process.env.NEXT_PUBLIC_AUTH_LOGIN_URL || "http://localhost:4000/login";
@@ -20,12 +21,16 @@ const actionLabel: Record<string, string> = {
 };
 const actionColor: Record<string, string> = {
     post_viewed: "#3b82f6", comment_generated: "#10b981",
-    post_saved: "#f59e0b", post_ignored: "#6b7280",
+    post_saved: "#f59e0b", post_ignored: "#64748b",
 };
 
 function fmtDate(ts: string) {
     if (!ts) return "—";
-    try { return new Date(ts).toLocaleString("it-IT", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }); }
+    try {
+        return new Date(ts).toLocaleString("it-IT", {
+            day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit"
+        });
+    }
     catch { return ts; }
 }
 
@@ -67,38 +72,34 @@ export default function ActivityPage() {
 
     if (loading) {
         return (
-            <>
-                <DashboardNav userName="…" />
-                <div className="auth-wrapper"><div className="spinner" style={{ width: 40, height: 40, borderWidth: 3 }} /></div>
-            </>
+            <div className="auth-wrapper" style={{ background: "var(--bg-light)" }}>
+                <div className="spinner" style={{ width: 40, height: 40, borderWidth: 3, borderTopColor: "var(--accent-blue)" }} />
+            </div>
         );
     }
 
     return (
-        <div style={{ minHeight: "100vh", background: "var(--color-bg)", color: "var(--color-text)", fontFamily: "var(--font)" }}>
+        <div style={{ minHeight: "100vh", background: "var(--bg-light)" }}>
             <DashboardNav userName={user?.full_name || user?.email} avatarUrl={user?.avatar_url} />
 
-            <main style={{ maxWidth: 760, margin: "0 auto", padding: "2.5rem 1.5rem" }}>
+            <main className={styles.container} style={{ maxWidth: 800 }}>
                 {/* Header */}
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1.75rem" }}>
+                <header className={styles.header} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "2rem" }}>
                     <div>
-                        <h1 style={{ fontSize: "1.5rem", fontWeight: 700, letterSpacing: "-0.03em", marginBottom: "0.25rem" }}>
-                            Attività Recente
+                        <h1 className={styles.title} style={{ fontSize: "1.75rem", marginBottom: "0.25rem" }}>
+                            Registro Attività
                         </h1>
-                        <p style={{ color: "var(--color-muted)", fontSize: "0.85rem", margin: 0 }}>
+                        <p className={styles.subtitle}>
                             Tutte le azioni registrate dal plugin su LinkedIn
                         </p>
                     </div>
-                    <Link href="/dashboard" style={{
-                        fontSize: "0.8rem", color: "var(--color-muted)", textDecoration: "none",
-                        padding: "0.35rem 0.85rem", border: "1px solid var(--color-border)", borderRadius: 20,
-                    }}>
-                        ← Overview
+                    <Link href="/dashboard" className={styles.viewAll} style={{ background: "#fff", border: "1px solid var(--border-soft)", color: "var(--text-muted)" }}>
+                        ← Dashboard
                     </Link>
-                </div>
+                </header>
 
                 {/* Filters */}
-                <div style={{ display: "flex", gap: "0.4rem", marginBottom: "1.25rem", flexWrap: "wrap" }}>
+                <div style={{ display: "flex", gap: "0.5rem", marginBottom: "2rem", flexWrap: "wrap" }}>
                     {[
                         { key: "all", label: "Tutti" },
                         { key: "comment_generated", label: "💬 Commenti" },
@@ -107,66 +108,61 @@ export default function ActivityPage() {
                         { key: "post_ignored", label: "⏭ Saltati" },
                     ].map(f => (
                         <button key={f.key} onClick={() => setFilter(f.key)} style={{
-                            padding: "0.3rem 0.85rem", borderRadius: 20, fontSize: "0.8rem",
-                            fontWeight: filter === f.key ? 600 : 400, cursor: "pointer",
-                            border: `1px solid ${filter === f.key ? "#3b82f6" : "var(--color-border)"}`,
-                            background: filter === f.key ? "#3b82f614" : "transparent",
-                            color: filter === f.key ? "#3b82f6" : "var(--color-muted)",
-                            transition: "all 0.15s",
+                            padding: "0.5rem 1rem", borderRadius: 8, fontSize: "0.875rem",
+                            fontWeight: filter === f.key ? 700 : 500, cursor: "pointer",
+                            border: "1px solid",
+                            borderColor: filter === f.key ? "var(--accent-blue)" : "var(--border-soft)",
+                            background: filter === f.key ? "var(--accent-soft)" : "#fff",
+                            color: filter === f.key ? "var(--accent-blue)" : "var(--text-muted)",
+                            transition: "all 0.2s ease",
+                            fontFamily: "var(--font-body)"
                         }}>{f.label}</button>
                     ))}
                 </div>
 
                 {/* List */}
-                <div style={{ background: "var(--color-surface)", border: "1px solid var(--color-border)", borderRadius: 16, overflow: "hidden" }}>
+                <div className={styles.section} style={{ padding: 0, overflow: "hidden" }}>
                     {filtered.length === 0 ? (
-                        <div style={{ padding: "2.5rem", textAlign: "center", color: "var(--color-muted)", fontSize: "0.875rem" }}>
+                        <div style={{ padding: "4rem 2rem", textAlign: "center", color: "var(--text-muted)", fontSize: "0.9rem" }}>
                             {items.length === 0
                                 ? "Nessuna attività ancora. Avvia il Co-pilot e naviga su LinkedIn."
                                 : "Nessun risultato per questo filtro."}
                         </div>
                     ) : (
                         filtered.map((item, i) => {
-                            const color = actionColor[item.action] || "#6b7280";
+                            const color = actionColor[item.action] || "#64748b";
                             const label = actionLabel[item.action] || item.action;
                             return (
-                                <div key={i} style={{
-                                    display: "flex", alignItems: "flex-start", gap: "1rem",
-                                    padding: "1rem 1.25rem",
-                                    borderBottom: i < filtered.length - 1 ? "1px solid var(--color-border)" : "none",
-                                }}>
-                                    <div style={{ width: 8, height: 8, borderRadius: "50%", background: color, marginTop: 7, flexShrink: 0 }} />
-                                    <div style={{ flex: 1, minWidth: 0 }}>
-                                        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.3rem", flexWrap: "wrap" }}>
-                                            <span style={{ fontWeight: 600, fontSize: "0.875rem" }}>
-                                                {item.author_name || "—"}
-                                            </span>
+                                <div key={i} className={styles.activityRow} style={{ padding: "1.25rem 1.5rem" }}>
+                                    <div className={styles.dot} style={{ background: color }} />
+                                    <div className={styles.activityContent}>
+                                        <div className={styles.activityMeta}>
+                                            <span className={styles.author}>{item.author_name || "—"}</span>
                                             {item.author_slug && (
                                                 <a href={`https://linkedin.com/in/${item.author_slug}`} target="_blank" rel="noopener noreferrer"
-                                                    style={{ fontSize: "0.72rem", color: "#3b82f6", textDecoration: "none", opacity: 0.7 }}>
+                                                    style={{ fontSize: "0.75rem", color: "var(--accent-blue)", textDecoration: "none", fontWeight: 600, opacity: 0.8 }}>
                                                     /in/{item.author_slug}
                                                 </a>
                                             )}
-                                            <span style={{ fontSize: "0.72rem", color, background: `${color}22`, borderRadius: 20, padding: "0.1rem 0.5rem" }}>
+                                            <span className={styles.badge} style={{ color, background: `${color}12` }}>
                                                 {label}
                                             </span>
                                         </div>
                                         {item.post_text && (
-                                            <div style={{ fontSize: "0.8rem", color: "var(--color-muted)", lineHeight: 1.5 }}>
+                                            <div className={styles.snippet}>
                                                 {item.post_text.slice(0, 160)}{item.post_text.length > 160 ? "…" : ""}
                                             </div>
                                         )}
                                     </div>
-                                    <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "0.35rem", flexShrink: 0 }}>
-                                        <span style={{ fontSize: "0.72rem", color: "var(--color-muted)", whiteSpace: "nowrap" }}>
+                                    <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "0.5rem", flexShrink: 0 }}>
+                                        <span className={styles.timestamp}>
                                             {fmtDate(item.timestamp)}
                                         </span>
                                         {item.post_url && (
-                                            <a href={item.post_url} target="_blank" rel="noopener noreferrer" style={{
-                                                fontSize: "0.7rem", color: "#3b82f6", textDecoration: "none",
-                                                padding: "0.15rem 0.5rem", border: "1px solid #3b82f644", borderRadius: 12,
+                                            <a href={item.post_url} target="_blank" rel="noopener noreferrer" className={styles.viewAll} style={{
+                                                fontSize: "0.75rem", padding: "0.25rem 0.6rem", borderRadius: 6
                                             }}>
-                                                Apri →
+                                                Apri post
                                             </a>
                                         )}
                                     </div>
@@ -178,11 +174,13 @@ export default function ActivityPage() {
 
                 {/* Load more */}
                 {hasMore && filtered.length > 0 && (
-                    <div style={{ textAlign: "center", marginTop: "1.25rem" }}>
+                    <div style={{ textAlign: "center", marginTop: "2rem" }}>
                         <button onClick={() => fetchActivity(offset, items)} disabled={loadingMore} style={{
-                            padding: "0.6rem 1.5rem", borderRadius: 20, fontSize: "0.85rem", fontWeight: 600,
-                            border: "1px solid var(--color-border)", background: "var(--color-surface)",
-                            color: "var(--color-text)", cursor: loadingMore ? "default" : "pointer", opacity: loadingMore ? 0.6 : 1,
+                            padding: "0.75rem 2rem", borderRadius: 8, fontSize: "0.9rem", fontWeight: 700,
+                            border: "1px solid var(--border-soft)", background: "#fff",
+                            color: "var(--text-main)", cursor: loadingMore ? "default" : "pointer", opacity: loadingMore ? 0.6 : 1,
+                            transition: "all 0.2s ease", boxShadow: "0 2px 4px rgba(0,0,0,0.02)",
+                            fontFamily: "var(--font-body)"
                         }}>
                             {loadingMore ? "Caricamento…" : "Carica altri"}
                         </button>

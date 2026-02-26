@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import DashboardNav from "./components/DashboardNav";
+import styles from "./dashboard.module.css";
 
 const AUTH_URL = process.env.NEXT_PUBLIC_AUTH_URL || "http://localhost:4000";
 const AUTH_LOGIN_URL = process.env.NEXT_PUBLIC_AUTH_LOGIN_URL || "http://localhost:4000/login";
@@ -21,7 +22,7 @@ const actionLabel: Record<string, string> = {
 };
 const actionColor: Record<string, string> = {
     post_viewed: "#3b82f6", comment_generated: "#10b981",
-    post_saved: "#f59e0b", post_ignored: "#6b7280",
+    post_saved: "#f59e0b", post_ignored: "#64748b",
 };
 
 function apiFetch<T>(path: string): Promise<T> {
@@ -30,40 +31,47 @@ function apiFetch<T>(path: string): Promise<T> {
 
 function fmtDate(ts: string) {
     if (!ts) return "—";
-    try { return new Date(ts).toLocaleDateString("it-IT", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }); }
+    try {
+        const date = new Date(ts);
+        const now = new Date();
+        const diffMs = now.getTime() - date.getTime();
+        const diffMins = Math.floor(diffMs / 60000);
+
+        if (diffMins < 60) return `${diffMins}m fa`;
+        if (diffMins < 1440) return `${Math.floor(diffMins / 60)}h fa`;
+
+        return date.toLocaleDateString("it-IT", { day: "2-digit", month: "short" });
+    }
     catch { return ts; }
 }
 
 /* ─── Sub-components ─────────────────────────────────────────────────────── */
-function StatCard({ icon, label, value, color }: { icon: string; label: string; value: number | string; color: string }) {
+function StatCard({ icon, label, value, color, delay }: { icon: string; label: string; value: number | string; color: string; delay: number }) {
     return (
-        <div style={{
-            background: "var(--color-surface)", border: "1px solid var(--color-border)",
-            borderRadius: 16, padding: "1.5rem", position: "relative", overflow: "hidden",
-        }}>
-            <div style={{ position: "absolute", top: 12, right: 14, fontSize: "1.5rem", opacity: 0.15 }}>{icon}</div>
-            <div style={{ fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--color-muted)", marginBottom: "0.6rem" }}>{label}</div>
-            <div style={{ fontSize: "2rem", fontWeight: 800, color, letterSpacing: "-0.03em" }}>{value ?? "—"}</div>
+        <div className={styles.statCard} style={{ animationDelay: `${delay}ms` }}>
+            <div className={styles.statIcon}>{icon}</div>
+            <div className={styles.statLabel}>{label}</div>
+            <div className={styles.statValue} style={{ color }}>{value ?? "—"}</div>
         </div>
     );
 }
 
 function ActivityRow({ item }: { item: ActivityItem }) {
-    const color = actionColor[item.action] || "#6b7280";
+    const color = actionColor[item.action] || "#64748b";
     const label = actionLabel[item.action] || item.action;
     return (
-        <div style={{ display: "flex", alignItems: "flex-start", gap: "0.75rem", padding: "0.9rem 0", borderBottom: "1px solid var(--color-border)" }}>
-            <div style={{ width: 8, height: 8, borderRadius: "50%", background: color, marginTop: 6, flexShrink: 0 }} />
-            <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.2rem" }}>
-                    <span style={{ fontWeight: 600, fontSize: "0.875rem" }}>{item.author_name || "—"}</span>
-                    <span style={{ fontSize: "0.75rem", color, background: `${color}22`, borderRadius: 20, padding: "0.1rem 0.5rem" }}>{label}</span>
+        <div className={styles.activityRow}>
+            <div className={styles.dot} style={{ background: color }} />
+            <div className={styles.activityContent}>
+                <div className={styles.activityMeta}>
+                    <span className={styles.author}>{item.author_name || "—"}</span>
+                    <span className={styles.badge} style={{ color, background: `${color}12` }}>{label}</span>
                 </div>
-                <div style={{ fontSize: "0.8rem", color: "var(--color-muted)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                <div className={styles.snippet}>
                     {item.post_text?.slice(0, 100) || "—"}
                 </div>
             </div>
-            <div style={{ fontSize: "0.75rem", color: "var(--color-muted)", whiteSpace: "nowrap", marginLeft: "0.5rem" }}>
+            <div className={styles.timestamp}>
                 {fmtDate(item.timestamp)}
             </div>
         </div>
@@ -72,19 +80,19 @@ function ActivityRow({ item }: { item: ActivityItem }) {
 
 function BridgeCard({ t }: { t: BridgeTarget }) {
     return (
-        <div style={{ background: "var(--color-surface)", border: "1px solid var(--color-border)", borderRadius: 14, padding: "1.1rem 1.25rem" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", marginBottom: "0.5rem" }}>
-                <span style={{ fontWeight: 700, fontSize: "0.9rem" }}>{t.target_name || t.target_slug || "—"}</span>
-                <span style={{ fontSize: "0.7rem", color: "#10b981", background: "#10b98122", borderRadius: 20, padding: "0.1rem 0.5rem" }}>
-                    forza {t.path_strength}
+        <div className={styles.bridgeCard}>
+            <div className={styles.bridgeTarget}>
+                <span className={styles.targetName}>{t.target_name || t.target_slug || "—"}</span>
+                <span className={styles.strength}>
+                    {t.path_strength}
                 </span>
             </div>
-            <div style={{ fontSize: "0.78rem", color: "var(--color-muted)" }}>
-                🌉 via <strong style={{ color: "var(--color-text)" }}>{t.bridge_name || t.bridge_slug}</strong>
+            <div className={styles.bridgePath}>
+                🌉 via <strong>{t.bridge_name || t.bridge_slug}</strong>
             </div>
             {t.post_text && (
-                <div style={{ fontSize: "0.75rem", color: "var(--color-muted)", marginTop: "0.4rem", fontStyle: "italic", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                    "{t.post_text.slice(0, 80)}"
+                <div className={styles.snippet} style={{ marginTop: "0.5rem", fontStyle: "italic" }}>
+                    "{t.post_text.slice(0, 80)}..."
                 </div>
             )}
         </div>
@@ -110,7 +118,7 @@ export default function DashboardPage() {
                 setUser(u);
                 Promise.all([
                     apiFetch<Stats>("/api/stats").then(setStats).catch(() => { }),
-                    apiFetch<ActivityItem[]>("/api/activity?limit=10").then(setActivity).catch(() => { }),
+                    apiFetch<ActivityItem[]>("/api/activity?limit=5").then(setActivity).catch(() => { }),
                     apiFetch<BridgeTarget[]>("/api/bridge-targets").then(setBridges).catch(() => { }),
                 ]).finally(() => setLoading(false));
             })
@@ -119,8 +127,8 @@ export default function DashboardPage() {
 
     if (loading) {
         return (
-            <div className="auth-wrapper">
-                <div className="spinner" style={{ width: 48, height: 48, borderWidth: 3 }} />
+            <div className="auth-wrapper" style={{ background: "var(--bg-light)" }}>
+                <div className="spinner" style={{ width: 40, height: 40, borderWidth: 3, borderTopColor: "var(--accent-blue)" }} />
             </div>
         );
     }
@@ -128,75 +136,68 @@ export default function DashboardPage() {
     if (!user) return null;
 
     return (
-        <div style={{ minHeight: "100vh", background: "var(--color-bg)", color: "var(--color-text)", fontFamily: "var(--font)" }}>
-
+        <div style={{ minHeight: "100vh", background: "var(--bg-light)" }}>
             <DashboardNav userName={user.full_name || user.email} avatarUrl={user.avatar_url} />
 
-            <main style={{ maxWidth: 1040, margin: "0 auto", padding: "2.5rem 1.5rem" }}>
-
+            <main className={styles.container}>
                 {/* Header */}
-                <div style={{ marginBottom: "2rem" }}>
-                    <h1 style={{ fontSize: "1.75rem", fontWeight: 700, letterSpacing: "-0.03em", marginBottom: "0.35rem" }}>
-                        Ciao, {user.full_name?.split(" ")[0] || "utente"} 👋
+                <header className={styles.header}>
+                    <h1 className={styles.title}>
+                        Bentornato, {user.full_name?.split(" ")[0] || "utente"}
                     </h1>
-                    <p style={{ color: "var(--color-muted)", fontSize: "0.9rem", margin: 0 }}>
-                        {stats ? `${stats.usage_days} giorni attivi · Ultimo aggiornamento adesso` : "Caricamento statistiche..."}
+                    <p className={styles.subtitle}>
+                        {stats ? `${stats.usage_days} giorni di attività · Dati aggiornati in tempo reale` : "Caricamento statistiche..."}
                     </p>
-                </div>
+                </header>
 
                 {/* Stats */}
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: "1rem", marginBottom: "2rem" }}>
-                    <StatCard icon="📊" label="Post analizzati" value={stats?.posts_analyzed ?? "—"} color="#3b82f6" />
-                    <StatCard icon="💬" label="Commenti generati" value={stats?.comments_generated ?? "—"} color="#10b981" />
-                    <StatCard icon="🤝" label="Rete contatti" value={stats?.connections ?? "—"} color="#8b5cf6" />
-                    <StatCard icon="🔥" label="Giorni di utilizzo" value={stats?.usage_days ?? "—"} color="#ef4444" />
+                <div className={styles.statsGrid}>
+                    <StatCard icon="📈" label="Post analizzati" value={stats?.posts_analyzed ?? "—"} color="var(--accent-blue)" delay={100} />
+                    <StatCard icon="✨" label="Commenti generati" value={stats?.comments_generated ?? "—"} color="var(--color-success)" delay={200} />
+                    <StatCard icon="🌐" label="Rete contatti" value={stats?.connections ?? "—"} color="#8b5cf6" delay={300} />
+                    <StatCard icon="⚡" label="Daily Streak" value={stats?.usage_days ?? "—"} color="#f59e0b" delay={400} />
                 </div>
 
-                {/* Two-column layout: Activity + Bridge */}
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.25rem" }}>
-
+                {/* Two-column layout */}
+                <div className={styles.mainGrid}>
                     {/* Activity Feed */}
-                    <div style={{ background: "var(--color-surface)", border: "1px solid var(--color-border)", borderRadius: 16, padding: "1.5rem" }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.75rem" }}>
-                            <h2 style={{ fontWeight: 700, fontSize: "1rem", margin: 0 }}>Attività Recente</h2>
-                            <Link href="/dashboard/activity" style={{
-                                fontSize: "0.78rem", color: "#3b82f6", textDecoration: "none",
-                                padding: "0.25rem 0.7rem", border: "1px solid #3b82f644", borderRadius: 20,
-                            }}>
-                                Vedi tutto →
+                    <div className={styles.section}>
+                        <div className={styles.sectionHeader}>
+                            <h2 className={styles.sectionTitle}>Attività Recente</h2>
+                            <Link href="/dashboard/activity" className={styles.viewAll}>
+                                Vedi tutto
                             </Link>
                         </div>
                         {activity.length === 0 ? (
-                            <p style={{ color: "var(--color-muted)", fontSize: "0.85rem", marginTop: "1rem" }}>
-                                Nessuna attività ancora. Avvia il Co-pilot e naviga su LinkedIn.
+                            <p style={{ color: "var(--text-muted)", fontSize: "0.875rem", textAlign: "center", padding: "2rem 0" }}>
+                                Nessuna attività registrata. Avvia l'estensione su LinkedIn per iniziare.
                             </p>
                         ) : (
-                            activity.map((item, i) => <ActivityRow key={i} item={item} />)
+                            <div style={{ display: "flex", flexDirection: "column" }}>
+                                {activity.map((item, i) => <ActivityRow key={i} item={item} />)}
+                            </div>
                         )}
                     </div>
 
-                    {/* Warm Reach Map preview */}
-                    <div style={{ background: "var(--color-surface)", border: "1px solid var(--color-border)", borderRadius: 16, padding: "1.5rem" }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
-                            <h2 style={{ fontWeight: 700, fontSize: "1rem", margin: 0 }}>🌉 Warm Reach Map</h2>
-                            <Link href="/dashboard/reach" style={{
-                                fontSize: "0.78rem", color: "#10b981", textDecoration: "none",
-                                padding: "0.25rem 0.7rem", border: "1px solid #10b98144", borderRadius: 20,
-                            }}>
-                                Esplora →
+                    {/* Warm Reach preview */}
+                    <div className={styles.section}>
+                        <div className={styles.sectionHeader}>
+                            <h2 className={styles.sectionTitle}>🌉 Warm Reach Map</h2>
+                            <Link href="/dashboard/reach" className={styles.viewAll} style={{ color: "var(--color-success)", background: "rgba(16, 185, 129, 0.08)" }}>
+                                Mappa
                             </Link>
                         </div>
                         {bridges.length === 0 ? (
-                            <p style={{ color: "var(--color-muted)", fontSize: "0.85rem" }}>
-                                Il grafo si costruisce man mano che usi il plugin. Continua ad analizzare post!
+                            <p style={{ color: "var(--text-muted)", fontSize: "0.875rem", textAlign: "center", padding: "2rem 0" }}>
+                                La tua rete di ponti si sta caricando. Continua a navigare su LinkedIn!
                             </p>
                         ) : (
-                            <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-                                {bridges.slice(0, 5).map((t, i) => <BridgeCard key={i} t={t} />)}
-                                {bridges.length > 5 && (
-                                    <p style={{ fontSize: "0.8rem", color: "var(--color-muted)", margin: 0, textAlign: "center" }}>
-                                        + {bridges.length - 5} altri percorsi disponibili
-                                    </p>
+                            <div style={{ display: "flex", flexDirection: "column" }}>
+                                {bridges.slice(0, 4).map((t, i) => <BridgeCard key={i} t={t} />)}
+                                {bridges.length > 4 && (
+                                    <Link href="/dashboard/reach" style={{ fontSize: "0.8125rem", color: "var(--text-muted)", textAlign: "center", textDecoration: "none", display: "block", marginTop: "1rem", fontWeight: 600 }}>
+                                        + esplora altri {bridges.length - 4} percorsi
+                                    </Link>
                                 )}
                             </div>
                         )}
@@ -204,12 +205,12 @@ export default function DashboardPage() {
                 </div>
 
                 {/* Account info footer */}
-                <div style={{ marginTop: "1.5rem", padding: "1rem 1.5rem", background: "var(--color-surface)", border: "1px solid var(--color-border)", borderRadius: 14 }}>
-                    <p style={{ color: "var(--color-muted)", fontSize: "0.8rem", margin: 0 }}>
-                        📌 <strong style={{ color: "var(--color-text)" }}>Account:</strong>{" "}
-                        {user.email} · ID {user.user_id} · Auth via <em>{user.auth_provider}</em>
+                <footer className={styles.footer}>
+                    <div style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--color-success)" }} />
+                    <p style={{ margin: 0 }}>
+                        Connesso come <strong>{user.email}</strong> via {user.auth_provider}
                     </p>
-                </div>
+                </footer>
             </main>
         </div>
     );

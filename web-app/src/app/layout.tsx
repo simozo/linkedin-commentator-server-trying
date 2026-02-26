@@ -5,8 +5,8 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
 export const metadata: Metadata = {
-  title: "LinkedIn Co-pilot — Accedi",
-  description: "Accedi o registrati a LinkedIn Co-pilot per sbloccare le funzionalità del plugin.",
+  title: "LinkedIn Grow — Dashboard",
+  description: "Potenzia la tua presenza su LinkedIn con analisi avanzate e suggerimenti basati sull'IA.",
 };
 
 export default function RootLayout({
