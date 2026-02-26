@@ -40,6 +40,10 @@ func main() {
 	api.Get("/stats", handlers.GetStats)
 	api.Get("/activity", handlers.GetActivity)
 	api.Get("/bridge-targets", handlers.GetBridgeTargets)
+	api.Get("/connections/stats", handlers.GetConnectionsStats)
+	api.Get("/connections/list", handlers.GetConnectionsList)
+	api.Get("/connections/insights", handlers.GetNetworkInsights)
+	api.Get("/connections/overlap", handlers.GetNetworkOverlap)
 
 	port := os.Getenv("PORT")
 	if port == "" {

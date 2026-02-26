@@ -10,7 +10,7 @@ const DASH_URL = process.env.NEXT_PUBLIC_DASHBOARD_URL || "http://localhost:5001
 
 /* ─── Types ─────────────────────────────────────────────────────────────── */
 interface User { user_id: number; email: string; full_name?: string; avatar_url?: string; auth_provider: string; }
-interface Stats { posts_analyzed: number; comments_generated: number; people_reached: number; usage_days: number; }
+interface Stats { posts_analyzed: number; comments_generated: number; people_reached: number; usage_days: number; connections: number; }
 interface ActivityItem { post_urn: string; post_url: string; author_name: string; author_slug: string; action: string; post_text: string; timestamp: string; }
 interface BridgeTarget { target_name: string; target_slug: string; bridge_name: string; bridge_slug: string; shared_post_urn: string; post_text: string; path_strength: number; }
 
@@ -148,7 +148,7 @@ export default function DashboardPage() {
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: "1rem", marginBottom: "2rem" }}>
                     <StatCard icon="📊" label="Post analizzati" value={stats?.posts_analyzed ?? "—"} color="#3b82f6" />
                     <StatCard icon="💬" label="Commenti generati" value={stats?.comments_generated ?? "—"} color="#10b981" />
-                    <StatCard icon="👥" label="Persone raggiunte" value={stats?.people_reached ?? "—"} color="#f59e0b" />
+                    <StatCard icon="🤝" label="Rete contatti" value={stats?.connections ?? "—"} color="#8b5cf6" />
                     <StatCard icon="🔥" label="Giorni di utilizzo" value={stats?.usage_days ?? "—"} color="#ef4444" />
                 </div>
 

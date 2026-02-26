@@ -39,6 +39,10 @@ func main() {
 	protected := app.Group("/events", middlewares.JWTProtected(), middlewares.HMACProtected())
 	protected.Post("/", handlers.ReceiveEvent)
 
+	// Protected Endpoint Connessioni (Stesso schema auth)
+	connections := app.Group("/connections", middlewares.JWTProtected(), middlewares.HMACProtected())
+	connections.Post("/batch", handlers.ImportConnections)
+
 	// Avvia Worker Background Queue->Graph
 	go worker.StartFlush()
 

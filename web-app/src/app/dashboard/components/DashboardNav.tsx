@@ -13,6 +13,7 @@ interface NavProps {
 
 const navLinks = [
     { href: "/dashboard", label: "Overview" },
+    { href: "/dashboard/network", label: "Rete" },
     { href: "/dashboard/activity", label: "Attività" },
     { href: "/dashboard/reach", label: "🌉 Reach Map" },
 ];

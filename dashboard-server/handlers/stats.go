@@ -17,6 +17,7 @@ type StatsResponse struct {
 	CommentsGen   int64 `json:"comments_generated"`
 	PeopleReached int64 `json:"people_reached"`
 	UsageDays     int64 `json:"usage_days"`
+	Connections   int64 `json:"connections"`
 }
 
 // GetStats handles GET /api/stats
@@ -33,11 +34,13 @@ func GetStats(c *fiber.Ctx) error {
 		query := `
 		MATCH (u:User {id: $userId})-[a:ACTION]->(p:Post)
 		OPTIONAL MATCH (p)-[:AUTHORED_BY]->(author:Person)
+		OPTIONAL MATCH (u)-[:CONNECTED_TO]->(p2:Person)
 		RETURN
 		  count(DISTINCT p)                                                    AS posts_analyzed,
 		  count(DISTINCT CASE WHEN a.type = 'comment_generated' THEN p END)   AS comments_generated,
 		  count(DISTINCT author)                                               AS people_reached,
-		  count(DISTINCT date(a.timestamp))                                    AS usage_days
+		  count(DISTINCT date(datetime(a.timestamp)))                          AS usage_days,
+		  count(DISTINCT p2)                                                   AS connections
 		`
 		rec, err := tx.Run(ctx, query, map[string]any{"userId": userID})
 		if err != nil {
@@ -57,6 +60,7 @@ func GetStats(c *fiber.Ctx) error {
 				CommentsGen:   get("comments_generated"),
 				PeopleReached: get("people_reached"),
 				UsageDays:     get("usage_days"),
+				Connections:   get("connections"),
 			}, nil
 		}
 		return StatsResponse{}, nil
