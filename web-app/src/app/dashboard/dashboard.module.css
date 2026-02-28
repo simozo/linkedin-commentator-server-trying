@@ -35,6 +35,19 @@
     font-weight: 500;
 }
 
+.tierBadge {
+    display: inline-block;
+    font-size: 0.75rem;
+    background: var(--accent-blue);
+    color: white;
+    padding: 0.2rem 0.6rem;
+    border-radius: 20px;
+    margin-left: 12px;
+    vertical-align: middle;
+    letter-spacing: 0.05em;
+    font-weight: 800;
+}
+
 .statsGrid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));

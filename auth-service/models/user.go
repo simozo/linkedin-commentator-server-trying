@@ -10,4 +10,5 @@ type User struct {
 	LinkedInID   *string `gorm:"default:null"        json:"linkedin_id,omitempty"`
 	AvatarURL    *string `gorm:"default:null"        json:"avatar_url,omitempty"`
 	FullName     *string `gorm:"default:null"        json:"full_name,omitempty"`
+	Tier         string  `gorm:"default:'free'"      json:"tier"`
 }

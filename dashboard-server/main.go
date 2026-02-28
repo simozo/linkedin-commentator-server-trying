@@ -29,8 +29,8 @@ func main() {
 	app := fiber.New()
 	app.Use(middleware.RequestLogger) // structured request logging
 	app.Use(cors.New(cors.Config{
-		AllowOrigins:     "http://localhost:3000,http://localhost:3001",
-		AllowHeaders:     "Origin, Content-Type, Accept",
+		AllowOrigins:     "http://localhost:3000,http://127.0.0.1:3000,http://localhost:3001,http://127.0.0.1:3001,http://localhost:5001,http://127.0.0.1:5001",
+		AllowHeaders:     "Origin, Content-Type, Accept, Authorization",
 		AllowMethods:     "GET,POST,OPTIONS",
 		AllowCredentials: true,
 	}))
@@ -44,6 +44,11 @@ func main() {
 	api.Get("/connections/list", handlers.GetConnectionsList)
 	api.Get("/connections/insights", handlers.GetNetworkInsights)
 	api.Get("/connections/overlap", handlers.GetNetworkOverlap)
+
+	// AI routes (Managed Claude)
+	api.Post("/ai/suggest-purposes", handlers.SuggestPurposes)
+	api.Post("/ai/generate-comment", handlers.GenerateComment)
+	api.Get("/user/usage", handlers.GetUsage)
 
 	port := os.Getenv("PORT")
 	if port == "" {

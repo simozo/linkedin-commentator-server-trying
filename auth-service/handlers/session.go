@@ -21,6 +21,7 @@ type SessionMeResponse struct {
 	FullName     *string `json:"full_name,omitempty"`
 	AvatarURL    *string `json:"avatar_url,omitempty"`
 	AuthProvider string  `json:"auth_provider"`
+	Tier         string  `json:"tier"`
 }
 
 const sessionCookieName = "session"
@@ -88,6 +89,7 @@ func Me(c *fiber.Ctx) error {
 		FullName:     user.FullName,
 		AvatarURL:    user.AvatarURL,
 		AuthProvider: user.AuthProvider,
+		Tier:         user.Tier,
 	})
 }
 
@@ -110,6 +112,15 @@ func generateSessionTokens(userID uint) (string, string, error) {
 		"user_id": userID,
 		"exp":     time.Now().Add(ttl).Unix(),
 	}
+
+	// We need the user's tier to include it in the JWT
+	var user models.User
+	if err := database.DB.Select("tier").First(&user, userID).Error; err == nil {
+		claims["tier"] = user.Tier
+	} else {
+		claims["tier"] = "free" // Fallback
+	}
+
 	token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
 
 	privateKeyBytes, err := os.ReadFile("private.pem")

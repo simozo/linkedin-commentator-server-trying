@@ -12,6 +12,7 @@ const DASH_URL = process.env.NEXT_PUBLIC_DASHBOARD_URL || "http://localhost:5001
 /* ─── Types ─────────────────────────────────────────────────────────────── */
 interface User { user_id: number; email: string; full_name?: string; avatar_url?: string; auth_provider: string; }
 interface Stats { posts_analyzed: number; comments_generated: number; people_reached: number; usage_days: number; connections: number; }
+interface Usage { tier: string; comments_today: number; daily_limit: number; graph_maturity: number; nodes_count: number; target_nodes_count: number; is_limit_reached: boolean; }
 interface ActivityItem { post_urn: string; post_url: string; author_name: string; author_slug: string; action: string; post_text: string; timestamp: string; }
 interface BridgeTarget { target_name: string; target_slug: string; bridge_name: string; bridge_slug: string; shared_post_urn: string; post_text: string; path_strength: number; }
 
@@ -105,6 +106,7 @@ export default function DashboardPage() {
     const [stats, setStats] = useState<Stats | null>(null);
     const [activity, setActivity] = useState<ActivityItem[]>([]);
     const [bridges, setBridges] = useState<BridgeTarget[]>([]);
+    const [usage, setUsage] = useState<Usage | null>(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -120,6 +122,7 @@ export default function DashboardPage() {
                     apiFetch<Stats>("/api/stats").then(setStats).catch(() => { }),
                     apiFetch<ActivityItem[]>("/api/activity?limit=5").then(setActivity).catch(() => { }),
                     apiFetch<BridgeTarget[]>("/api/bridge-targets").then(setBridges).catch(() => { }),
+                    apiFetch<Usage>("/api/user/usage").then(setUsage).catch(() => { }),
                 ]).finally(() => setLoading(false));
             })
             .catch(() => { window.location.href = AUTH_LOGIN_URL; });
@@ -144,6 +147,7 @@ export default function DashboardPage() {
                 <header className={styles.header}>
                     <h1 className={styles.title}>
                         Bentornato, {user.full_name?.split(" ")[0] || "utente"}
+                        {user.tier && <span className={styles.tierBadge}>{user.tier.toUpperCase()}</span>}
                     </h1>
                     <p className={styles.subtitle}>
                         {stats ? `${stats.usage_days} giorni di attività · Dati aggiornati in tempo reale` : "Caricamento statistiche..."}
@@ -153,8 +157,17 @@ export default function DashboardPage() {
                 {/* Stats */}
                 <div className={styles.statsGrid}>
                     <StatCard icon="📈" label="Post analizzati" value={stats?.posts_analyzed ?? "—"} color="var(--accent-blue)" delay={100} />
-                    <StatCard icon="✨" label="Commenti generati" value={stats?.comments_generated ?? "—"} color="var(--color-success)" delay={200} />
-                    <StatCard icon="🌐" label="Rete contatti" value={stats?.connections ?? "—"} color="#8b5cf6" delay={300} />
+                    <StatCard icon="✨" label="Commenti oggi" value={usage ? `${usage.comments_today}/${usage.daily_limit}` : (stats?.comments_generated ?? "—")} color="var(--color-success)" delay={200} />
+                    <div className={styles.statCard} style={{ animationDelay: '300ms', border: '1px solid var(--accent-blue-20)' }}>
+                        <div className={styles.statIcon}>🕸️</div>
+                        <div className={styles.statLabel}>Maturità Grafo</div>
+                        <div style={{ width: '100%', height: '8px', background: 'rgba(0,0,0,0.05)', borderRadius: '4px', marginTop: '8px', overflow: 'hidden' }}>
+                            <div style={{ width: `${(usage?.graph_maturity || 0) * 100}%`, height: '100%', background: 'var(--accent-blue)', transition: 'width 1s ease-out' }} />
+                        </div>
+                        <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>
+                            {Math.floor((usage?.graph_maturity || 0) * 100)}% attivato
+                        </div>
+                    </div>
                     <StatCard icon="⚡" label="Daily Streak" value={stats?.usage_days ?? "—"} color="#f59e0b" delay={400} />
                 </div>
 
