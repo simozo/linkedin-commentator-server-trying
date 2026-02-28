@@ -32,3 +32,26 @@ graph TD
     Person -- PUBLISHES --> JobOp(Job Opportunity)
     JobOp -- SEEKING_ROLE --> Role(Role Name)
 ```
+
+## 5. AI Intelligence Layer: Utilizzo dei Nuovi Dati
+L'arrivo di questa mole di dati "non filtrati" trasformerà l'IA da semplice generatore di testi a vero e proprio **motore di business intelligence**.
+
+### A. Estrazione Strutturata dai Job Post (Claude 4.5)
+Invece di salvare il testo grezzo, useremo l'IA per mappare i dati degli annunci:
+- **Entità**: Ruolo, Seniority, Tech Stack, Range Salariale (se presente).
+- **Matching**: L'IA segnalerà proattivamente: *"Questo post cerca un React Dev. Hai un ponte di forza 8 verso l'autore tramite [Nome Collegamento]"*.
+
+### B. Scoring delle Relazioni tramite Menziomni
+Analizzando chi tagga chi nei post visualizzati nel feed:
+- **AI Analytics**: L'IA calcolerà il "Peso del Legame". Se A tagga spesso B, il "ponte" è molto forte (Endorsement Implicito).
+- **Copywriting**: Nel generare il commento, l'IA suggerirà: *"Cita @[Nome] in questo commento poiché interagisce spesso con l'autore su questi temi"*.
+
+### C. Analisi dei Trend e "Orbiting"
+Con i dati di tutto il feed, l'IA può mappare i **Cluster di Interesse**:
+- **Discovery**: *"In questi giorni la tua 'orbita' sta parlando molto di [Topic X]. Dovresti scrivere un post su questo per intercettare il trend"*.
+- **Pre-warming**: L'IA può suggerire scopi del tipo: *"Fatti notare da [Target] commentando questo post di un suo collaboratore stretto che hai appena visualizzato"*.
+
+### D. Filtro Intelligente del Feed
+Invece dell'algoritmo di LinkedIn, useremo un'IA locale (o server-side) per:
+- **Priority Scoring**: Ordinare il feed in base a quanto un post è "utile" per i tuoi obiettivi di networking (es. post di potenziali clienti o job hunters).
+- **Ghost Writing Assistito**: L'IA inizierà a preparare "bozze silenziose" dei commenti mentre scorri, pronte per essere validate in un clic.

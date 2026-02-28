@@ -16,6 +16,12 @@ type CoCommenter struct {
 	CommentSnippet string `json:"comment_snippet"`
 }
 
+type Mention struct {
+	Name string `json:"name"`
+	Slug string `json:"slug"`
+	Type string `json:"type"` // "person" or "company"
+}
+
 type Event struct {
 	UserID          string        `json:"user_id"`
 	PostUrn         string        `json:"post_urn"`
@@ -29,6 +35,8 @@ type Event struct {
 	InteractorName  string        `json:"interactor_name"`
 	InteractorSlug  string        `json:"interactor_slug"`
 	CoCommenters    []CoCommenter `json:"co_commenters"`
+	Mentions        []Mention     `json:"mentions"`
+	Hashtags        []string      `json:"hashtags"`
 	Timestamp       time.Time     `json:"timestamp"`
 }
 

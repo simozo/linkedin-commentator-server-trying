@@ -3,6 +3,7 @@ package worker
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 	"time"
 
@@ -15,6 +16,12 @@ type CoCommenter struct {
 	Name           string `json:"name"`
 	Slug           string `json:"slug"`
 	CommentSnippet string `json:"comment_snippet"`
+}
+
+type Mention struct {
+	Name string `json:"name"`
+	Slug string `json:"slug"`
+	Type string `json:"type"` // "person" or "company"
 }
 
 type Event struct {
@@ -30,6 +37,8 @@ type Event struct {
 	InteractorName  string        `json:"interactor_name"`
 	InteractorSlug  string        `json:"interactor_slug"`
 	CoCommenters    []CoCommenter `json:"co_commenters"`
+	Mentions        []Mention     `json:"mentions"`
+	Hashtags        []string      `json:"hashtags"`
 	Timestamp       time.Time     `json:"timestamp"`
 }
 
@@ -138,6 +147,50 @@ func writeToNeo4j(events []Event) {
 				}
 				if _, err := tx.Run(ctx, ccQuery, ccParams); err != nil {
 					log.Printf("Failed to write co-commenter %s: %v\n", cc.Slug, err)
+				}
+			}
+
+			// 3. Write Mentions
+			for _, m := range e.Mentions {
+				if m.Slug == "" {
+					continue
+				}
+				label := "Person"
+				if m.Type == "company" {
+					label = "Company"
+				}
+				mQuery := fmt.Sprintf(`
+				MERGE (m:%s {slug: $mSlug})
+				  ON CREATE SET m.name = $mName
+				MERGE (p:Post {urn: $postUrn})
+				MERGE (p)-[:MENTIONS]->(m)
+				`, label)
+				mParams := map[string]any{
+					"mSlug":   m.Slug,
+					"mName":   m.Name,
+					"postUrn": e.PostUrn,
+				}
+				if _, err := tx.Run(ctx, mQuery, mParams); err != nil {
+					log.Printf("Failed to write mention %s: %v\n", m.Slug, err)
+				}
+			}
+
+			// 4. Write Hashtags
+			for _, h := range e.Hashtags {
+				if h == "" {
+					continue
+				}
+				hQuery := `
+				MERGE (t:Topic {name: $tName})
+				MERGE (p:Post {urn: $postUrn})
+				MERGE (p)-[:HAS_TOPIC]->(t)
+				`
+				hParams := map[string]any{
+					"tName":   h,
+					"postUrn": e.PostUrn,
+				}
+				if _, err := tx.Run(ctx, hQuery, hParams); err != nil {
+					log.Printf("Failed to write hashtag %s: %v\n", h, err)
 				}
 			}
 		}
