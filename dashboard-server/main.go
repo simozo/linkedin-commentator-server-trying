@@ -38,6 +38,7 @@ func main() {
 	// All API routes require a valid session cookie
 	api := app.Group("/api", middleware.AuthRequired)
 	api.Get("/stats", handlers.GetStats)
+	api.Get("/trends", handlers.GetTrends)
 	api.Get("/activity", handlers.GetActivity)
 	api.Get("/bridge-targets", handlers.GetBridgeTargets)
 	api.Get("/connections/stats", handlers.GetConnectionsStats)

@@ -16,6 +16,7 @@ const navLinks = [
     { href: "/dashboard/network", label: "Rete" },
     { href: "/dashboard/activity", label: "Attività" },
     { href: "/dashboard/reach", label: "🌉 Reach Map" },
+    { href: "/dashboard/trends", label: "🔥 Trends" },
 ];
 
 export default function DashboardNav({ userName, avatarUrl }: NavProps) {

@@ -10,11 +10,12 @@ const AUTH_LOGIN_URL = process.env.NEXT_PUBLIC_AUTH_LOGIN_URL || "http://localho
 const DASH_URL = process.env.NEXT_PUBLIC_DASHBOARD_URL || "http://localhost:5001";
 
 /* ─── Types ─────────────────────────────────────────────────────────────── */
-interface User { user_id: number; email: string; full_name?: string; avatar_url?: string; auth_provider: string; }
+interface User { user_id: number; email: string; full_name?: string; avatar_url?: string; auth_provider: string; tier?: string; }
 interface Stats { posts_analyzed: number; comments_generated: number; people_reached: number; usage_days: number; connections: number; }
 interface Usage { tier: string; comments_today: number; daily_limit: number; graph_maturity: number; nodes_count: number; target_nodes_count: number; is_limit_reached: boolean; }
 interface ActivityItem { post_urn: string; post_url: string; author_name: string; author_slug: string; action: string; post_text: string; timestamp: string; }
 interface BridgeTarget { target_name: string; target_slug: string; bridge_name: string; bridge_slug: string; shared_post_urn: string; post_text: string; path_strength: number; }
+interface Trend { name: string; count: number; }
 
 /* ─── Helpers ────────────────────────────────────────────────────────────── */
 const actionLabel: Record<string, string> = {
@@ -106,6 +107,7 @@ export default function DashboardPage() {
     const [stats, setStats] = useState<Stats | null>(null);
     const [activity, setActivity] = useState<ActivityItem[]>([]);
     const [bridges, setBridges] = useState<BridgeTarget[]>([]);
+    const [trends, setTrends] = useState<Trend[]>([]);
     const [usage, setUsage] = useState<Usage | null>(null);
     const [loading, setLoading] = useState(true);
 
@@ -122,6 +124,7 @@ export default function DashboardPage() {
                     apiFetch<Stats>("/api/stats").then(setStats).catch(() => { }),
                     apiFetch<ActivityItem[]>("/api/activity?limit=5").then(setActivity).catch(() => { }),
                     apiFetch<BridgeTarget[]>("/api/bridge-targets").then(setBridges).catch(() => { }),
+                    apiFetch<Trend[]>("/api/trends").then(setTrends).catch(() => { }),
                     apiFetch<Usage>("/api/user/usage").then(setUsage).catch(() => { }),
                 ]).finally(() => setLoading(false));
             })
@@ -215,6 +218,28 @@ export default function DashboardPage() {
                             </div>
                         )}
                     </div>
+                </div>
+
+                {/* Trends Section */}
+                <div className={styles.section} style={{ marginTop: "2rem" }}>
+                    <div className={styles.sectionHeader}>
+                        <h2 className={styles.sectionTitle}>🔥 Trending Topics (dal tuo Feed)</h2>
+                        <span className={styles.viewAll}>Live Intelligence</span>
+                    </div>
+                    {trends.length === 0 ? (
+                        <p style={{ color: "var(--text-muted)", fontSize: "0.875rem", textAlign: "center", padding: "2rem 0" }}>
+                            Analizzando il tuo feed per identificare i trend più caldi...
+                        </p>
+                    ) : (
+                        <div style={{ display: "flex", flexWrap: "wrap", gap: "0.75rem", padding: "0.5rem 0" }}>
+                            {trends.map((t, i) => (
+                                <div key={i} className={styles.trendTag}>
+                                    <span className={styles.trendName}>#{t.name}</span>
+                                    <span className={styles.trendCount}>{t.count}</span>
+                                </div>
+                            ))}
+                        </div>
+                    )}
                 </div>
 
                 {/* Account info footer */}

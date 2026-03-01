@@ -31,6 +31,7 @@ type Event struct {
 	Action          string        `json:"action"`
 	AuthorName      string        `json:"author_name"`
 	AuthorSlug      string        `json:"author_slug"`
+	AuthorAvatar    string        `json:"author_avatar"`
 	AuthorDegree    string        `json:"author_degree"`
 	PostText        string        `json:"post_text"`
 	InteractionType string        `json:"interaction_type"`
@@ -83,8 +84,8 @@ func writeToNeo4j(events []Event) {
 		for _, e := range events {
 			query := `
 			MERGE (a:Person {slug: $authorSlug})
-			  ON CREATE SET a.name = $authorName, a.degree = $authorDegree
-			  ON MATCH SET a.name = $authorName, a.degree = coalesce($authorDegree, a.degree)
+			  ON CREATE SET a.name = $authorName, a.degree = $authorDegree, a.avatar_url = $authorAvatar
+			  ON MATCH SET a.name = $authorName, a.degree = coalesce($authorDegree, a.degree), a.avatar_url = coalesce($authorAvatar, a.avatar_url)
 			  
 			MERGE (p:Post {urn: $postUrn})
 			  ON CREATE SET p.text = $postText, p.url = $url
@@ -102,6 +103,7 @@ func writeToNeo4j(events []Event) {
 				"action":       e.Action,
 				"authorName":   e.AuthorName,
 				"authorSlug":   e.AuthorSlug,
+				"authorAvatar": e.AuthorAvatar,
 				"authorDegree": e.AuthorDegree,
 				"postText":     e.PostText,
 				"timestamp":    e.Timestamp.Format(time.RFC3339),
