@@ -11,7 +11,7 @@ import (
 )
 
 func main() {
-	godotenv.Load(".env")
+	godotenv.Load("../../.env")
 	uri := os.Getenv("NEO4J_URI")
 	user := os.Getenv("NEO4J_USER")
 	pass := os.Getenv("NEO4J_PASSWORD")

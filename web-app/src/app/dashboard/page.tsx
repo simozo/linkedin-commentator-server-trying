@@ -16,6 +16,7 @@ interface Usage { tier: string; comments_today: number; daily_limit: number; gra
 interface ActivityItem { post_urn: string; post_url: string; author_name: string; author_slug: string; action: string; post_text: string; timestamp: string; }
 interface BridgeTarget { target_name: string; target_slug: string; bridge_name: string; bridge_slug: string; shared_post_urn: string; post_text: string; path_strength: number; }
 interface Trend { name: string; count: number; }
+interface Maturity { action_count: number; level: string; next_level_threshold: number; progress: number; description: string; }
 
 /* ─── Helpers ────────────────────────────────────────────────────────────── */
 const actionLabel: Record<string, string> = {
@@ -109,6 +110,7 @@ export default function DashboardPage() {
     const [bridges, setBridges] = useState<BridgeTarget[]>([]);
     const [trends, setTrends] = useState<Trend[]>([]);
     const [usage, setUsage] = useState<Usage | null>(null);
+    const [maturity, setMaturity] = useState<Maturity | null>(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -126,6 +128,7 @@ export default function DashboardPage() {
                     apiFetch<BridgeTarget[]>("/api/bridge-targets").then(setBridges).catch(() => { }),
                     apiFetch<Trend[]>("/api/trends").then(setTrends).catch(() => { }),
                     apiFetch<Usage>("/api/user/usage").then(setUsage).catch(() => { }),
+                    apiFetch<Maturity>("/api/stats/maturity").then(setMaturity).catch(() => { }),
                 ]).finally(() => setLoading(false));
             })
             .catch(() => { window.location.href = AUTH_LOGIN_URL; });
@@ -161,14 +164,37 @@ export default function DashboardPage() {
                 <div className={styles.statsGrid}>
                     <StatCard icon="📈" label="Post analizzati" value={stats?.posts_analyzed ?? "—"} color="var(--accent-blue)" delay={100} />
                     <StatCard icon="✨" label="Commenti oggi" value={usage ? `${usage.comments_today}/${usage.daily_limit}` : (stats?.comments_generated ?? "—")} color="var(--color-success)" delay={200} />
-                    <div className={styles.statCard} style={{ animationDelay: '300ms', border: '1px solid var(--accent-blue-20)' }}>
-                        <div className={styles.statIcon}>🕸️</div>
-                        <div className={styles.statLabel}>Maturità Grafo</div>
-                        <div style={{ width: '100%', height: '8px', background: 'rgba(0,0,0,0.05)', borderRadius: '4px', marginTop: '8px', overflow: 'hidden' }}>
-                            <div style={{ width: `${(usage?.graph_maturity || 0) * 100}%`, height: '100%', background: 'var(--accent-blue)', transition: 'width 1s ease-out' }} />
+                    <div className={styles.statCard} style={{
+                        animationDelay: '300ms',
+                        border: '1px solid var(--accent-blue-20)',
+                        background: 'linear-gradient(135deg, rgba(255,255,255,0.8), rgba(240,246,255,0.8))',
+                        backdropFilter: 'blur(10px)'
+                    }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', marginBottom: '8px' }}>
+                            <div className={styles.statLabel} style={{ margin: 0 }}>Maturità Grafo</div>
+                            <span style={{
+                                fontSize: '10px',
+                                fontWeight: 800,
+                                background: 'var(--accent-blue)',
+                                color: '#fff',
+                                padding: '2px 8px',
+                                borderRadius: '12px',
+                                textTransform: 'uppercase'
+                            }}>
+                                {maturity?.level || "SEED"}
+                            </span>
                         </div>
-                        <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>
-                            {Math.floor((usage?.graph_maturity || 0) * 100)}% attivato
+                        <div style={{ width: '100%', height: '10px', background: 'rgba(0,0,0,0.05)', borderRadius: '5px', overflow: 'hidden', position: 'relative' }}>
+                            <div style={{
+                                width: `${maturity?.progress || 0}%`,
+                                height: '100%',
+                                background: 'linear-gradient(90deg, #3b82f6, #8b5cf6)',
+                                transition: 'width 1.5s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                                boxShadow: '0 0 10px rgba(59, 130, 246, 0.5)'
+                            }} />
+                        </div>
+                        <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '8px', fontStyle: 'italic', lineHeight: '1.4' }}>
+                            {maturity?.description || "Inizializzazione del grafo..."}
                         </div>
                     </div>
                     <StatCard icon="⚡" label="Daily Streak" value={stats?.usage_days ?? "—"} color="#f59e0b" delay={400} />

@@ -20,6 +20,14 @@ type StatsResponse struct {
 	Connections   int64 `json:"connections"`
 }
 
+type MaturityResponse struct {
+	ActionCount int64   `json:"action_count"`
+	Level       string  `json:"level"`
+	NextLevel   int64   `json:"next_level_threshold"`
+	Progress    float64 `json:"progress"`
+	Description string  `json:"description"`
+}
+
 // GetStats handles GET /api/stats
 // Returns activity counters for the authenticated user.
 func GetStats(c *fiber.Ctx) error {
@@ -73,4 +81,55 @@ func GetStats(c *fiber.Ctx) error {
 
 	logger.Info("stats served", "user_id", userID, "duration_ms", time.Since(start).Milliseconds())
 	return c.JSON(result)
+}
+
+// GetMaturity handles GET /api/stats/maturity
+func GetMaturity(c *fiber.Ctx) error {
+	userID := fmt.Sprint(c.Locals("user_id"))
+	ctx := context.Background()
+	session := database.Neo4jDriver.NewSession(ctx, neo4j.SessionConfig{AccessMode: neo4j.AccessModeRead})
+	defer session.Close(ctx)
+
+	result, err := session.Run(ctx, "MATCH (:User {id: $userId})-[a:ACTION]->() RETURN count(a) as total", map[string]any{"userId": userID})
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	var count int64
+	if result.Next(ctx) {
+		val, _ := result.Record().Get("total")
+		if v, ok := val.(int64); ok {
+			count = v
+		}
+	}
+
+	maturity := MaturityResponse{
+		ActionCount: count,
+	}
+
+	// Logic for levels
+	switch {
+	case count <= 50:
+		maturity.Level = "Seed"
+		maturity.NextLevel = 50
+		maturity.Description = "Raccogliendo i primi dati dal tuo feed..."
+		maturity.Progress = (float64(count) / 50.0) * 100
+	case count <= 200:
+		maturity.Level = "Sprout"
+		maturity.NextLevel = 200
+		maturity.Description = "Inizio a capire i tuoi interessi e chi segui."
+		maturity.Progress = (float64(count-50) / 150.0) * 100
+	case count <= 500:
+		maturity.Level = "Growth"
+		maturity.NextLevel = 500
+		maturity.Description = "Pronto per suggerimenti e commenti strategici."
+		maturity.Progress = (float64(count-200) / 300.0) * 100
+	default:
+		maturity.Level = "Mature"
+		maturity.NextLevel = 1000 // Future expansion
+		maturity.Description = "Grafo completo. AI Bridge sbloccato!"
+		maturity.Progress = 100
+	}
+
+	return c.JSON(maturity)
 }

@@ -24,6 +24,7 @@ type TrendMention struct {
 	Name   string `json:"name"`
 	Avatar string `json:"avatar"`
 	Slug   string `json:"slug"`
+	Type   string `json:"type"` // "mention", "liked", "reposted", etc.
 }
 
 type TrendItem struct {
@@ -50,8 +51,9 @@ func GetTrends(c *fiber.Ctx) error {
 		LIMIT 50
 		MATCH (p:Post)-[:HAS_TOPIC]->(t)
 		MATCH (p)-[:AUTHORED_BY]->(auth)
-		OPTIONAL MATCH (p)-[:MENTIONS]->(m)
-		WITH t, trendCount, p, auth, m
+		OPTIONAL MATCH (p)-[relM:MENTIONS]->(m)
+		OPTIONAL MATCH (inter)-[relA:AMPLIFIED]->(p)
+		WITH t, trendCount, p, auth, m, relM, inter, relA
 		ORDER BY p.timestamp DESC
 		WITH t, trendCount, 
 		     collect(DISTINCT {
@@ -62,10 +64,15 @@ func GetTrends(c *fiber.Ctx) error {
 		         authorSlug: auth.slug
 		     })[..3] AS posts,
 		     collect(DISTINCT {
-		         name: m.name,
-		         avatar: m.avatar_url,
-		         slug: m.slug
-		     })[..5] AS mentions
+		         name: coalesce(m.name, inter.name),
+		         avatar: coalesce(m.avatar_url, inter.avatar_url),
+		         slug: coalesce(m.slug, inter.slug),
+		         type: CASE 
+		             WHEN m IS NOT NULL THEN 'mention'
+		             WHEN inter IS NOT NULL THEN relA.type
+		             ELSE 'unknown'
+		         END
+		     })[..15] AS mentions
 		RETURN t.name AS name, trendCount AS count, posts, mentions
 		ORDER BY count DESC
 		`
@@ -126,6 +133,9 @@ func GetTrends(c *fiber.Ctx) error {
 					}
 					if v, ok := mMap["slug"].(string); ok {
 						mention.Slug = v
+					}
+					if v, ok := mMap["type"].(string); ok {
+						mention.Type = v
 					}
 
 					if mention.Name != "" {

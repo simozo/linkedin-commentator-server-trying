@@ -17,6 +17,7 @@ interface TrendMention {
     name: string;
     avatar: string;
     slug: string;
+    type: string;
 }
 
 interface Trend {
@@ -199,11 +200,20 @@ export default function TrendsPage() {
                                 Menzioni Correlate
                             </h3>
                             <div className={styles.mentionsSection}>
-                                {(selectedTrend.mentions || []).length > 0 ? selectedTrend.mentions.map((m, i) => (
-                                    <span key={i} className={styles.mentionPill}>
-                                        {m.name || "Anonimo"}
-                                    </span>
-                                )) : <p style={{ fontSize: "0.85rem", color: "var(--text-muted)" }}>Nessuna menzione rilevante trovata.</p>}
+                                {(selectedTrend.mentions || []).length > 0 ? selectedTrend.mentions.map((m, i) => {
+                                    let icon = "📝";
+                                    if (m.type === "liked") icon = "❤️";
+                                    if (m.type === "reposted") icon = "🔁";
+                                    if (m.type === "suggested") icon = "🤝";
+                                    if (m.type === "commented") icon = "💬";
+
+                                    return (
+                                        <span key={i} className={styles.mentionPill}>
+                                            <span style={{ marginRight: "4px" }}>{icon}</span>
+                                            {m.name || "Anonimo"}
+                                        </span>
+                                    );
+                                }) : <p style={{ fontSize: "0.85rem", color: "var(--text-muted)" }}>Nessuna menzione rilevante trovata.</p>}
                             </div>
                         </div>
 
