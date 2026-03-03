@@ -28,3 +28,25 @@ func ConnectNeo4j() {
 	Neo4jDriver = driver
 	log.Println("Connected to Neo4j")
 }
+
+// EnsureIndexes creates indexes on the most queried properties.
+// Uses IF NOT EXISTS so it is safe to call on every startup.
+func EnsureIndexes() {
+	ctx := context.Background()
+	session := Neo4jDriver.NewSession(ctx, neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
+	defer session.Close(ctx)
+
+	indexes := []string{
+		"CREATE INDEX person_slug IF NOT EXISTS FOR (n:Person) ON (n.slug)",
+		"CREATE INDEX post_urn   IF NOT EXISTS FOR (n:Post)   ON (n.urn)",
+		"CREATE INDEX topic_name IF NOT EXISTS FOR (n:Topic)  ON (n.name)",
+		"CREATE INDEX user_id    IF NOT EXISTS FOR (n:User)   ON (n.id)",
+	}
+
+	for _, q := range indexes {
+		if _, err := session.Run(ctx, q, nil); err != nil {
+			log.Printf("Warning: failed to create index (%s): %v\n", q, err)
+		}
+	}
+	log.Println("Neo4j indexes ensured")
+}

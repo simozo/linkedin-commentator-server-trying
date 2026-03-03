@@ -33,6 +33,7 @@ type Event struct {
 	AuthorSlug      string        `json:"author_slug"`
 	AuthorAvatar    string        `json:"author_avatar"`
 	AuthorDegree    string        `json:"author_degree"`
+	AuthorHeadline  string        `json:"author_headline"`
 	PostText        string        `json:"post_text"`
 	InteractionType string        `json:"interaction_type"`
 	InteractorName  string        `json:"interactor_name"`
@@ -84,8 +85,8 @@ func writeToNeo4j(events []Event) {
 		for _, e := range events {
 			query := `
 			MERGE (a:Person {slug: $authorSlug})
-			  ON CREATE SET a.name = $authorName, a.degree = $authorDegree, a.avatar_url = $authorAvatar
-			  ON MATCH SET a.name = $authorName, a.degree = coalesce($authorDegree, a.degree), a.avatar_url = coalesce($authorAvatar, a.avatar_url)
+			  ON CREATE SET a.name = $authorName, a.degree = $authorDegree, a.avatar_url = $authorAvatar, a.headline = $authorHeadline
+			  ON MATCH SET a.name = $authorName, a.degree = coalesce($authorDegree, a.degree), a.avatar_url = coalesce($authorAvatar, a.avatar_url), a.headline = coalesce(nullif($authorHeadline, ''), a.headline)
 			  
 			MERGE (p:Post {urn: $postUrn})
 			  ON CREATE SET p.text = $postText, p.url = $url
@@ -101,11 +102,12 @@ func writeToNeo4j(events []Event) {
 				"postUrn":      e.PostUrn,
 				"url":          e.URL,
 				"action":       e.Action,
-				"authorName":   e.AuthorName,
-				"authorSlug":   e.AuthorSlug,
-				"authorAvatar": e.AuthorAvatar,
-				"authorDegree": e.AuthorDegree,
-				"postText":     e.PostText,
+				"authorName":     e.AuthorName,
+				"authorSlug":     e.AuthorSlug,
+				"authorAvatar":   e.AuthorAvatar,
+				"authorDegree":   e.AuthorDegree,
+				"authorHeadline": e.AuthorHeadline,
+				"postText":       e.PostText,
 				"timestamp":    e.Timestamp.Format(time.RFC3339),
 			}
 

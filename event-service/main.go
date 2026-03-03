@@ -23,6 +23,7 @@ func main() {
 	// Inizializza Servizi Database
 	database.ConnectRedis()
 	database.ConnectNeo4j()
+	database.EnsureIndexes()
 	defer database.Neo4jDriver.Close(database.Ctx)
 
 	// Inizializza Server HTTP
