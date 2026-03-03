@@ -28,6 +28,8 @@ export default function ReachPage() {
     const [bridges, setBridges] = useState<BridgeTarget[]>([]);
     const [loading, setLoading] = useState(true);
     const [selected, setSelected] = useState<BridgeTarget | null>(null);
+    const [suggestion, setSuggestion] = useState<{ strategy: string; reasoning: string } | null>(null);
+    const [loadingSuggestion, setLoadingSuggestion] = useState(false);
 
     useEffect(() => {
         fetch(`${AUTH_URL}/me`, { credentials: "include" })
@@ -39,6 +41,23 @@ export default function ReachPage() {
                     .then(r => r.json()).then(setBridges).finally(() => setLoading(false));
             }).catch(() => { window.location.href = AUTH_LOGIN_URL; });
     }, []);
+
+    useEffect(() => {
+        if (!selected) {
+            setSuggestion(null);
+            return;
+        }
+
+        setLoadingSuggestion(true);
+        fetch(`${DASH_URL}/api/ai/orbiting-suggestion?target=${selected.target_slug}`, { credentials: "include" })
+            .then(r => r.json())
+            .then(data => {
+                if (data.strategy) {
+                    setSuggestion({ strategy: data.strategy, reasoning: data.reasoning });
+                }
+            })
+            .finally(() => setLoadingSuggestion(false));
+    }, [selected]);
 
     if (loading) {
         return (
@@ -193,9 +212,23 @@ export default function ReachPage() {
                                         background: "var(--accent-soft)", border: "1px solid var(--accent-blue)", borderRadius: 12, padding: "1.25rem", fontSize: "0.875rem", color: "var(--text-main)", lineHeight: 1.5, marginBottom: "1.5rem"
                                     }}>
                                         <div style={{ fontWeight: 700, marginBottom: "0.5rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                                            <span>💡</span> Azione suggerita
+                                            <span>{loadingSuggestion ? "⏳" : "💡"}</span> {loadingSuggestion ? "Analisi AI in corso..." : "Azione suggerita (AI)"}
                                         </div>
-                                        Commenta il post condiviso con <strong>{selected.bridge_name || selected.bridge_slug}</strong> menzionando un insight rilevante. Questo renderà visibile il tuo nome a <strong>{selected.target_name || selected.target_slug}</strong>.
+
+                                        {loadingSuggestion ? (
+                                            <div style={{ height: 40, display: "flex", alignItems: "center" }}>
+                                                <div className="spinner" style={{ width: 20, height: 20, borderWidth: 2 }} />
+                                            </div>
+                                        ) : suggestion ? (
+                                            <>
+                                                <p style={{ marginBottom: "0.75rem" }}>{suggestion.strategy}</p>
+                                                <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", borderTop: "1px solid var(--border-soft)", paddingTop: "0.5rem", marginTop: "0.5rem", fontStyle: "italic" }}>
+                                                    <strong>Perché:</strong> {suggestion.reasoning}
+                                                </div>
+                                            </>
+                                        ) : (
+                                            <p>Seleziona un target per generare una strategia di avvicinamento personalizzata tramite AI.</p>
+                                        )}
                                     </div>
 
                                     {selected.shared_post_urn && (

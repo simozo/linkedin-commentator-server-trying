@@ -60,15 +60,16 @@ func main() {
 	}
 	eventReqBody, _ := json.Marshal(eventReq)
 
-	// Sign payload
-	mac := hmac.New(sha256.New, []byte(authResp.SigningSecret))
+	// Sign payload - Decode hex secret first (matching server middleware)
+	secretBytes, _ := hex.DecodeString(authResp.SigningSecret)
+	mac := hmac.New(sha256.New, secretBytes)
 	mac.Write(eventReqBody)
 	signature := hex.EncodeToString(mac.Sum(nil))
 	fmt.Printf("Event Payload: %s\n", string(eventReqBody))
 	fmt.Printf("Calculated HMAC: %s\n", signature)
 
 	fmt.Println("\n=== 3. Sending Event to Event Service ===")
-	req, err := http.NewRequest("POST", "http://localhost:3000/events", bytes.NewBuffer(eventReqBody))
+	req, err := http.NewRequest("POST", "http://localhost:3100/events", bytes.NewBuffer(eventReqBody))
 	if err != nil {
 		fmt.Printf("Failed to create request: %v\n", err)
 		return

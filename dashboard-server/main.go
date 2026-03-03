@@ -50,6 +50,7 @@ func main() {
 	// AI routes (Managed Claude)
 	api.Post("/ai/suggest-purposes", handlers.SuggestPurposes)
 	api.Post("/ai/generate-comment", handlers.GenerateComment)
+	api.Get("/ai/orbiting-suggestion", handlers.GetOrbitingSuggestion)
 	api.Get("/user/usage", handlers.GetUsage)
 
 	port := os.Getenv("PORT")

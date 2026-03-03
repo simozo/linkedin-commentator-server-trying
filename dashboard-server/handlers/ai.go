@@ -309,3 +309,105 @@ func buildCommentPrompt(req AIRequest) string {
 	text += "\nGenera il commento e la relativa traduzione in italiano (solo JSON come indicato). Se stai rispondendo a un commento, scrivi una risposta diretta e naturale nella lingua del commento originale."
 	return text
 }
+
+// OrbitingSuggestionResponse defines the AI output for a bridge strategy
+type OrbitingSuggestionResponse struct {
+	TargetName string `json:"targetName"`
+	BridgeName string `json:"bridgeName"`
+	Strategy   string `json:"strategy"`
+	Reasoning  string `json:"reasoning"`
+}
+
+// GetOrbitingSuggestion handles GET /api/ai/orbiting-suggestion?target=slug
+// It fetches relationship data from Neo4j and uses Claude to explain the best "orbiting" strategy.
+func GetOrbitingSuggestion(c *fiber.Ctx) error {
+	userID := fmt.Sprint(c.Locals("user_id"))
+	targetSlug := c.Query("target")
+
+	if targetSlug == "" {
+		return c.Status(400).JSON(fiber.Map{"error": "Target slug is required"})
+	}
+
+	ctx := context.Background()
+	session := database.Neo4jDriver.NewSession(ctx, neo4j.SessionConfig{AccessMode: neo4j.AccessModeRead})
+	defer session.Close(ctx)
+
+	// Fetch specific bridge data for this target
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		query := `
+		MATCH (me:User {id: $userId})-[:ACTION]->(p:Post)
+		      <-[r1:COMMENTED_ON]-(bridge:Person)
+		      -[r2:COMMENTED_ON]->(p2:Post)
+		      <-[r3:COMMENTED_ON]-(target:Person {slug: $targetSlug})
+		RETURN
+		  target.name   AS target_name,
+		  bridge.name   AS bridge_name,
+		  p2.text       AS shared_post_text,
+		  p2.urn        AS shared_post_urn,
+		  sum(coalesce(r1.weight, 1) + coalesce(r2.weight, 1) + coalesce(r3.weight, 1)) AS path_strength
+		ORDER BY path_strength DESC
+		LIMIT 1
+		`
+		rec, err := tx.Run(ctx, query, map[string]any{"userId": userID, "targetSlug": targetSlug})
+		if err != nil {
+			return nil, err
+		}
+		if rec.Next(ctx) {
+			r := rec.Record()
+			getString := func(key string) string {
+				v, _ := r.Get(key)
+				if v == nil {
+					return ""
+				}
+				return fmt.Sprint(v)
+			}
+			return map[string]string{
+				"target_name":      getString("target_name"),
+				"bridge_name":      getString("bridge_name"),
+				"shared_post_text": getString("shared_post_text"),
+				"shared_post_urn":  getString("shared_post_urn"),
+			}, nil
+		}
+		return nil, fmt.Errorf("No bridge found for this target")
+	})
+
+	if err != nil {
+		return c.Status(404).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	data := result.(map[string]string)
+
+	// Prepare AI Prompt
+	systemPrompt := `Sei un esperto di strategie di networking su LinkedIn. 
+Il tuo compito è spiegare a un utente come usare una "Persona Ponte" (Bridge) per farsi notare da un "Profilo Target".
+L'utente vuole "entrare nell'orbita" del Target senza sembrare uno stalker o fare spam.
+
+Rispondi ESCLUSIVAMENTE con un JSON valido:
+{
+  "targetName": "Nome del target",
+  "bridgeName": "Nome del ponte",
+  "strategy": "Un consiglio pratico di 2-3 frasi su cosa fare (es. commentare il post condiviso citando il ponte)",
+  "reasoning": "Spiegazione logica di perché questo ponte è forte"
+}`
+
+	userPrompt := fmt.Sprintf(`
+Target: %s
+Persona Ponte: %s
+Post condiviso da entrambi: %s
+
+Suggerisci una strategia di "Orbiting" (avvicinamento indiretto) intelligente.`,
+		data["target_name"], data["bridge_name"], data["shared_post_text"])
+
+	aiResult, err := callAnthropic(systemPrompt, userPrompt)
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "AI Suggestion failed: " + err.Error()})
+	}
+
+	jsonStr := extractJSON(aiResult)
+	var response OrbitingSuggestionResponse
+	if err := json.Unmarshal([]byte(jsonStr), &response); err != nil {
+		return c.JSON(fiber.Map{"raw": aiResult})
+	}
+
+	return c.JSON(response)
+}

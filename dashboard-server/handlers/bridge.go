@@ -39,11 +39,15 @@ func GetBridgeTargets(c *fiber.Ctx) error {
 		//                            ↓ (COMMENTED_ON)
 		//                          Post2 ← (COMMENTED_ON) ← Target Person
 		// Target = person I haven't directly reached yet
+		// 2-hop bridge traversal with relationship weighting:
+		// Me → (ACTION on) → Post ← (COMMENTED_ON + weight) ← Bridge Person
+		//                            ↓ (COMMENTED_ON + weight)
+		//                          Post2 ← (COMMENTED_ON + weight) ← Target Person
 		query := `
 		MATCH (me:User {id: $userId})-[:ACTION]->(p:Post)
-		      <-[:COMMENTED_ON]-(bridge:Person)
-		      -[:COMMENTED_ON]->(p2:Post)
-		      <-[:COMMENTED_ON]-(target:Person)
+		      <-[r1:COMMENTED_ON]-(bridge:Person)
+		      -[r2:COMMENTED_ON]->(p2:Post)
+		      <-[r3:COMMENTED_ON]-(target:Person)
 		WHERE NOT (me)-[:ACTION]->(:Post)<-[:COMMENTED_ON]-(target)
 		  AND target.slug <> bridge.slug
 		  AND target.slug IS NOT NULL
@@ -55,7 +59,7 @@ func GetBridgeTargets(c *fiber.Ctx) error {
 		  bridge.slug   AS bridge_slug,
 		  p2.urn        AS shared_post_urn,
 		  p2.text       AS post_text,
-		  count(*)      AS path_strength
+		  sum(coalesce(r1.weight, 1) + coalesce(r2.weight, 1) + coalesce(r3.weight, 1)) AS path_strength
 		ORDER BY path_strength DESC
 		LIMIT 20
 		`

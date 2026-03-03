@@ -21,7 +21,8 @@ Questo documento definisce la roadmap strategica integrando la **Data Collection
 
 1.  **Feed Observer (Silenzioso)**:
     - Implementare `IntersectionObserver` nel plugin.
-    - Tracciamento `post_viewed` per ogni post visibile >2s (URN, autore, interattori visibili).
+    - Tracciamento `post_viewed` per ogni post visibile >2s.
+    - **Data Enrichment**: Cattura sistematica della **Headline/Tagline** per ogni autore e co-commentatore incontrato.
     - **Valore**: Mappa le persone che gravitano nell'orbita dell'utente anche senza interazione diretta.
 2.  **Maturità del Grafo**:
     - Dashboard che mostra il "Loading" del valore reale: una volta raggiunto il target di nodi, si sbloccano le feature avanzate.
@@ -48,16 +49,22 @@ Questo documento definisce la roadmap strategica integrando la **Data Collection
     - **Bridge Analysis Passivo**: Monitorare chi sta cercando di raggiungere chi nel network visibile (competitor intelligence).
 3.  **Filtraggio AI del Feed**:
     - Un'interfaccia dashboard che riordina i post visualizzati non per "engagement" ma per "rilevanza strategica" rispetto ai target salvati.
+4.  **Strategic Prospecting & Multi-hop Orbiting**:
+    - **Esplorazione Profonda**: Estensione della mappa oltre il 2° grado (fino al 3° o 4° grado di "ponte") per scovare opportunità inesplorate ma raggiungibili.
+    - **Targeting per Headline**: Filtraggio e ricerca avanzata dei target basata sulla Headline professionale (catturata durante la fase di ingestion).
+    - **Pruning & Weighting**: Utilizzo del Relationship Weighting come filtro critico per eliminare il rumore dei percorsi multi-grado, seguendo solo le "scie" di interazione realmente calde.
+    - **Strategic Ranking**: Ordinamento dei target suggeriti incrociando la forza del percorso sociale con il valore strategico del ruolo professionale del target.
 
 ---
 
 ## ⚙️ Modifiche Architetturali Richieste
 
 - **Neo4j Schema**:
-    - Nodi: `:Topic`, `:Person`, `:Post`, `:Action`.
+    - Nodi: `:Topic`, `:Person` (con proprietà `headline`), `:Post`, `:Action`.
     - Relazioni: `:HAS_TOPIC`, `:MENTIONS`, `:AMPLIFIED` (Like/Comment).
 - **Processing Layer**:
-    - Worker che calcola periodicamente la forza dei legami (Relationship Score) basandosi sulla frequenza di interazioni e menzioni.
+    - Data Ingestion: Update `feed-observer.js` per catturare selettori CSS della tagline sotto i nomi utente.
+    - Worker: Calcolo periodico della forza dei legami (Relationship Score) basandosi sulla frequenza di interazioni e menzioni.
 - **AI Layer**:
     - Prompt per l'estrazione dei temi (Topic Extraction) e per il suggerimento di strategie di "Orbiting".
 
@@ -67,3 +74,13 @@ Questo documento definisce la roadmap strategica integrando la **Data Collection
 1. [ ] Sviluppo `IntersectionObserver` per plugin.
 2. [ ] Backend: Update `event-service` per parsing Hashtag/Tag.
 3. [ ] Dashboard: Tab **Trend** iniziale basata sui Topic estratti.
+
+---
+
+## 📝 Changelog
+
+### 2026-03-03
+- **Integrazione Strategic Prospecting**: Aggiunta specifica per esplorazione del grafo oltre il 2° grado (Multi-hop).
+- **Enrichment Tagline**: Introdotto l'obbligo di cattura della `headline` professionale per ogni nodo `:Person` per abilitare filtri basati sul ruolo (CEO, Founder, etc.).
+- **Relationship Weighting (Trigger)**: Ottimizzazione del worker tramite "dirty flag" su Redis per minimizzare il carico su Neo4j.
+- **AI Orbiting API**: Implementazione dell'endpoint di strategia AI integrato nella dashboard.

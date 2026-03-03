@@ -203,5 +203,7 @@ func writeToNeo4j(events []Event) {
 		log.Printf("Transaction execution failed: %v\n", err)
 	} else {
 		log.Printf("Successfully flushed %d events to Neo4j\n", len(events))
+		// Signal weighting worker that graph is "dirty"
+		database.RedisClient.Set(ctx, "graph:dirty", "true", 0)
 	}
 }

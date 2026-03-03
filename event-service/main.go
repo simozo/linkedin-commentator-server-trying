@@ -45,6 +45,8 @@ func main() {
 
 	// Avvia Worker Background Queue->Graph
 	go worker.StartFlush()
+	// Avvia Worker per il calcolo dei Pesi Relazionali (Asincrono)
+	go worker.StartWeighting()
 
 	// Listen su Porta Assegnata
 	port := os.Getenv("PORT")
