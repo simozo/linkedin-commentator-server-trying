@@ -24,6 +24,7 @@ func main() {
 	database.ConnectRedis()
 	database.ConnectNeo4j()
 	database.EnsureIndexes()
+	database.RunMigrations("../neo4j/migrations")
 	defer database.Neo4jDriver.Close(database.Ctx)
 
 	// Inizializza Server HTTP

@@ -109,17 +109,17 @@ func GetMaturity(c *fiber.Ctx) error {
 
 	// Logic for levels
 	switch {
-	case count <= 50:
+	case count < 50:
 		maturity.Level = "Seed"
 		maturity.NextLevel = 50
 		maturity.Description = "Raccogliendo i primi dati dal tuo feed..."
 		maturity.Progress = (float64(count) / 50.0) * 100
-	case count <= 200:
+	case count < 200:
 		maturity.Level = "Sprout"
 		maturity.NextLevel = 200
 		maturity.Description = "Inizio a capire i tuoi interessi e chi segui."
 		maturity.Progress = (float64(count-50) / 150.0) * 100
-	case count <= 500:
+	case count < 500:
 		maturity.Level = "Growth"
 		maturity.NextLevel = 500
 		maturity.Description = "Pronto per suggerimenti e commenti strategici."
