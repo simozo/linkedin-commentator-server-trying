@@ -35,7 +35,11 @@ func Register(c *fiber.Ctx) error {
 		return c.Status(500).JSON(fiber.Map{"error": "Email already exists or failed to create user"})
 	}
 
-	return c.JSON(fiber.Map{"message": "User successfully registered"})
+	if err := createWebSession(user.ID, c); err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Failed to create session"})
+	}
+
+	return c.JSON(fiber.Map{"message": "User successfully registered", "onboarding_complete": false})
 }
 
 func Login(c *fiber.Ctx) error {
@@ -68,8 +72,13 @@ func Login(c *fiber.Ctx) error {
 		return c.Status(500).JSON(fiber.Map{"error": err.Error()})
 	}
 
+	// fetch onboarding status for redirect hint
+	var u models.User
+	database.DB.Select("onboarding_complete").First(&u, user.ID)
+
 	return c.JSON(fiber.Map{
-		"token":          jwtToken,
-		"signing_secret": signingSecret,
+		"token":               jwtToken,
+		"signing_secret":      signingSecret,
+		"onboarding_complete": u.OnboardingComplete,
 	})
 }

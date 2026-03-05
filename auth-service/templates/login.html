@@ -427,9 +427,8 @@
                 }
 
                 if (currentTab === "register") {
-                    showAlert("Account creato! Ora fai il login.", "success");
-                    switchTab("login");
-                    document.getElementById("password").value = "";
+                    // Nuovo utente: vai all'onboarding
+                    window.location.href = DASHBOARD_URL + "/onboarding";
                     return;
                 }
 
@@ -439,6 +438,8 @@
                         showAlert("✅ Plugin sbloccato! Puoi chiudere questa scheda.", "success");
                         setTimeout(() => window.close(), 2500);
                     });
+                } else if (!data.onboarding_complete) {
+                    window.location.href = DASHBOARD_URL + "/onboarding";
                 } else {
                     window.location.href = DASHBOARD_URL + "/dashboard";
                 }

@@ -14,14 +14,21 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
+
 // SessionMeResponse is the payload returned by GET /me.
 type SessionMeResponse struct {
-	UserID       uint    `json:"user_id"`
-	Email        string  `json:"email"`
-	FullName     *string `json:"full_name,omitempty"`
-	AvatarURL    *string `json:"avatar_url,omitempty"`
-	AuthProvider string  `json:"auth_provider"`
-	Tier         string  `json:"tier"`
+	UserID             uint    `json:"user_id"`
+	Email              string  `json:"email"`
+	FullName           *string `json:"full_name,omitempty"`
+	AvatarURL          *string `json:"avatar_url,omitempty"`
+	AuthProvider       string  `json:"auth_provider"`
+	Tier               string  `json:"tier"`
+	OnboardingComplete bool    `json:"onboarding_complete"`
+	OnboardingGoal     string  `json:"onboarding_goal,omitempty"`
+	Sector             string  `json:"sector,omitempty"`
+	Role               string  `json:"role,omitempty"`
+	PreferredTone      string  `json:"preferred_tone,omitempty"`
+	ExtensionLinked    bool    `json:"extension_linked"`
 }
 
 const sessionCookieName = "session"
@@ -84,12 +91,18 @@ func Me(c *fiber.Ctx) error {
 	}
 
 	return c.JSON(SessionMeResponse{
-		UserID:       user.ID,
-		Email:        user.Email,
-		FullName:     user.FullName,
-		AvatarURL:    user.AvatarURL,
-		AuthProvider: user.AuthProvider,
-		Tier:         user.Tier,
+		UserID:             user.ID,
+		Email:              user.Email,
+		FullName:           user.FullName,
+		AvatarURL:          user.AvatarURL,
+		AuthProvider:       user.AuthProvider,
+		Tier:               user.Tier,
+		OnboardingComplete: user.OnboardingComplete,
+		OnboardingGoal:     user.OnboardingGoal,
+		Sector:             user.Sector,
+		Role:               user.Role,
+		PreferredTone:      user.PreferredTone,
+		ExtensionLinked:    user.ExtensionInstallToken != nil,
 	})
 }
 
@@ -102,6 +115,92 @@ func LogoutWeb(c *fiber.Ctx) error {
 	}
 	c.ClearCookie(sessionCookieName)
 	return c.JSON(fiber.Map{"message": "Logged out"})
+}
+
+// OnboardingRequest is the body for POST /profile/onboarding.
+type OnboardingRequest struct {
+	Goal  string `json:"goal"`  // "presence" | "network"
+	Sector string `json:"sector"`
+	Role  string `json:"role"`
+	Tone  string `json:"tone"`  // "professional" | "direct" | "conversational"
+}
+
+// SaveOnboarding handles POST /profile/onboarding — persists onboarding choices and marks the user as onboarded.
+func SaveOnboarding(c *fiber.Ctx) error {
+	userID, err := getUserIDFromSession(c)
+	if err != nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Unauthorized"})
+	}
+
+	var req OnboardingRequest
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Invalid request body"})
+	}
+
+	tone := req.Tone
+	if tone == "" {
+		tone = "professional"
+	}
+
+	updates := map[string]any{
+		"onboarding_complete": true,
+		"onboarding_goal":     req.Goal,
+		"sector":              req.Sector,
+		"role":                req.Role,
+		"preferred_tone":      tone,
+	}
+	if err := database.DB.Model(&models.User{}).Where("id = ?", userID).Updates(updates).Error; err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Failed to save onboarding data"})
+	}
+
+	return c.JSON(fiber.Map{"ok": true})
+}
+
+// LinkExtensionRequest is the body for POST /link-extension.
+type LinkExtensionRequest struct {
+	InstallToken string `json:"install_token"`
+}
+
+// LinkExtension handles POST /link-extension — saves the extension install token for the authenticated user.
+func LinkExtension(c *fiber.Ctx) error {
+	userID, err := getUserIDFromSession(c)
+	if err != nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Unauthorized"})
+	}
+
+	var req LinkExtensionRequest
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Invalid request body"})
+	}
+	if req.InstallToken == "" {
+		return c.Status(400).JSON(fiber.Map{"error": "install_token is required"})
+	}
+
+	if err := database.DB.Model(&models.User{}).Where("id = ?", userID).Update("extension_install_token", req.InstallToken).Error; err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Failed to save install token"})
+	}
+
+	return c.JSON(fiber.Map{"ok": true})
+}
+
+
+// GeneratePluginToken handles GET /plugin-token.
+// Generates a fresh JWT + HMAC signing secret for the authenticated user's plugin.
+func GeneratePluginToken(c *fiber.Ctx) error {
+	userID, err := getUserIDFromSession(c)
+	if err != nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Unauthorized"})
+	}
+
+	jwtToken, signingSecret, err := generateSessionTokens(userID)
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Failed to generate plugin token"})
+	}
+
+	return c.JSON(fiber.Map{
+		"token":          jwtToken,
+		"signing_secret": signingSecret,
+	})
 }
 
 // generateSessionTokens creates a JWT and HMAC signing secret for the plugin.

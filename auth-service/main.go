@@ -51,6 +51,9 @@ func main() {
 	// Routes — Session / Dashboard
 	app.Get("/me", handlers.Me)
 	app.Post("/logout-web", handlers.LogoutWeb)
+	app.Post("/profile/onboarding", handlers.SaveOnboarding)
+	app.Post("/link-extension", handlers.LinkExtension)
+	app.Get("/plugin-token", handlers.GeneratePluginToken)
 
 	// Start server
 	port := os.Getenv("PORT")

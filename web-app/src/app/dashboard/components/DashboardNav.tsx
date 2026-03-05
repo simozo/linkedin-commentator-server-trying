@@ -4,6 +4,29 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const AUTH_URL = process.env.NEXT_PUBLIC_AUTH_URL || "http://localhost:4000";
+
+const AVATAR_PALETTE = [
+    { bg: "#2563eb", text: "#fff" }, // brand blue
+    { bg: "#0e7490", text: "#fff" }, // teal
+    { bg: "#7c3aed", text: "#fff" }, // violet
+    { bg: "#059669", text: "#fff" }, // emerald
+    { bg: "#d97706", text: "#fff" }, // amber
+    { bg: "#dc2626", text: "#fff" }, // red
+    { bg: "#0f172a", text: "#fff" }, // slate dark
+];
+
+function avatarColor(seed: string) {
+    let hash = 0;
+    for (let i = 0; i < seed.length; i++) hash = seed.charCodeAt(i) + ((hash << 5) - hash);
+    return AVATAR_PALETTE[Math.abs(hash) % AVATAR_PALETTE.length];
+}
+
+function getInitials(name?: string): string {
+    if (!name) return "?";
+    const parts = name.trim().split(/\s+/);
+    if (parts.length === 1) return parts[0][0].toUpperCase();
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
 const AUTH_LOGIN_URL = process.env.NEXT_PUBLIC_AUTH_LOGIN_URL || "http://localhost:4000/login";
 
 interface NavProps {
@@ -96,13 +119,34 @@ export default function DashboardNav({ userName, avatarUrl }: NavProps) {
 
             {/* User + Logout */}
             <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.3rem 0.6rem", borderRadius: 30, background: "var(--bg-light)", border: "1px solid var(--border-soft)" }}>
-                    {avatarUrl && (
-                        <img src={avatarUrl} alt="avatar"
-                            style={{ width: 24, height: 24, borderRadius: "50%", objectFit: "cover" }} />
-                    )}
-                    <span style={{ fontSize: "0.82rem", fontWeight: 600, color: "var(--text-main)" }}>{userName?.split(" ")[0]}</span>
-                </div>
+                <Link href="/dashboard/account" style={{
+                    display: "flex", alignItems: "center", gap: "0.6rem",
+                    padding: "0.25rem 0.75rem 0.25rem 0.25rem",
+                    borderRadius: 30, background: "var(--bg-light)",
+                    border: "1px solid var(--border-soft)",
+                    textDecoration: "none", transition: "border-color 0.2s, box-shadow 0.2s",
+                }}>
+                    {(() => {
+                        const color = avatarColor(userName || "?");
+                        return (
+                            <div style={{
+                                width: 28, height: 28, borderRadius: "50%",
+                                background: color.bg,
+                                flexShrink: 0,
+                                display: "flex", alignItems: "center", justifyContent: "center",
+                                fontSize: "0.68rem", fontWeight: 800, color: color.text,
+                                letterSpacing: "0.02em",
+                                fontFamily: "var(--font-display)",
+                                userSelect: "none",
+                            }}>
+                                {getInitials(userName)}
+                            </div>
+                        );
+                    })()}
+                    <span style={{ fontSize: "0.82rem", fontWeight: 600, color: "var(--text-main)" }}>
+                        {userName?.split(" ")[0]}
+                    </span>
+                </Link>
                 <button onClick={handleLogout} style={{
                     padding: "0.4rem 1rem", fontSize: "0.82rem", fontWeight: 600,
                     border: "1px solid var(--border-soft)", borderRadius: 8,

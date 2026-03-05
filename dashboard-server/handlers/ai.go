@@ -50,6 +50,8 @@ type AIRequest struct {
 	UserName            string      `json:"userName,omitempty"`
 	Purposes            []string    `json:"purposes,omitempty"`
 	TriggerData         interface{} `json:"triggerData,omitempty"`
+	Sector              string      `json:"sector,omitempty"`
+	AuthorDegree        string      `json:"authorDegree,omitempty"`
 }
 
 func callAnthropic(system string, userContent string) (string, error) {
@@ -302,6 +304,13 @@ func buildCommentPrompt(req AIRequest) string {
 				text += fmt.Sprintf("\nL'utente ha scelto di rispondere specificamente a %s, che ha scritto: \"%s\".\n", authorName, commentText)
 			}
 		}
+	}
+
+	if req.Sector != "" {
+		text += fmt.Sprintf("\nSettore professionale dell'utente: %s\n", req.Sector)
+	}
+	if req.AuthorDegree != "" {
+		text += fmt.Sprintf("\nGrado di connessione con l'autore del post: %s\n", req.AuthorDegree)
 	}
 
 	purposesStr, _ := json.Marshal(req.Purposes)
