@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import styles from "../dashboard.module.css";
 import DashboardNav from "../components/DashboardNav";
 import Link from "next/link";
 
@@ -75,33 +74,33 @@ export default function TrendsPage() {
     );
 
     if (loading) {
-        return <div className={styles.loadingContainer}>Analisi del grafo in corso...</div>;
+        return <div className="flex items-center justify-center h-screen font-semibold text-text-muted bg-bg-light">Analisi del grafo in corso...</div>;
     }
 
     return (
-        <div className={styles.dashboard}>
+        <div className="/* TODO: dashboard */">
             <DashboardNav userName={user?.full_name} avatarUrl={user?.avatar_url} />
 
-            <main className={styles.container}>
-                <header className={styles.header} style={{ marginBottom: "3rem" }}>
+            <main className="max-w-[1080px] mx-auto px-6 py-12 animate-fadeIn">
+                <header className="mb-12" style={{ marginBottom: "3rem" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginBottom: "0.5rem" }}>
-                        <Link href="/dashboard" className={styles.viewAll} style={{ margin: 0, padding: "0.4rem 0.8rem" }}>
+                        <Link href="/dashboard" className="text-[0.875rem] font-semibold text-brand-blue no-underline px-4 py-2 bg-brand-soft rounded-lg transition-all duration-200 hover:bg-brand-blue/[0.12]" style={{ margin: 0, padding: "0.4rem 0.8rem" }}>
                             ← Dashboard
                         </Link>
-                        <h1 className={styles.title} style={{ margin: 0 }}>🔥 Feed Intelligence</h1>
+                        <h1 className="text-[2.25rem] font-bold text-text-main tracking-[-0.04em] mb-2 font-display" style={{ margin: 0 }}>🔥 Feed Intelligence</h1>
                     </div>
-                    <p className={styles.subtitle}>
+                    <p className="text-base text-text-muted font-medium font-body">
                         Hashtag e argomenti ricorrenti estratti dai post che hai visto.
                     </p>
                 </header>
 
-                <div className={styles.section}>
-                    <div className={styles.sectionHeader} style={{ marginBottom: "2rem" }}>
-                        <h2 className={styles.sectionTitle}>I Tuoi Trend ({trends.length})</h2>
+                <div className="bg-white border border-black/[0.06] rounded-[24px] p-8 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.02)]">
+                    <div className="flex justify-between items-center mb-6" style={{ marginBottom: "2rem" }}>
+                        <h2 className="text-[1.25rem] font-bold text-text-main font-display">I Tuoi Trend ({trends.length})</h2>
                         <input
                             type="text"
                             placeholder="Cerca argomento..."
-                            className={styles.searchBar}
+                            className="/* TODO: searchBar */"
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                             style={{
@@ -130,7 +129,7 @@ export default function TrendsPage() {
                             {filteredTrends.map((trend, i) => (
                                 <div
                                     key={i}
-                                    className={styles.statCard}
+                                    className="bg-white border border-black/[0.06] rounded-md p-7 relative overflow-hidden transition-all duration-300 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.02)] hover:-translate-y-1 hover:shadow-lg hover:border-brand-blue"
                                     onClick={() => setSelectedTrend(trend)}
                                     style={{
                                         padding: "1.75rem",
@@ -186,20 +185,20 @@ export default function TrendsPage() {
 
             {/* Detail Drawer */}
             {selectedTrend && (
-                <div className={styles.detailOverlay} onClick={() => setSelectedTrend(null)}>
-                    <div className={styles.detailDrawer} onClick={(e) => e.stopPropagation()}>
-                        <button className={styles.closeButton} onClick={() => setSelectedTrend(null)}>×</button>
+                <div className="fixed inset-0 bg-slate-900/40 backdrop-blur z-[1000] flex justify-end" onClick={() => setSelectedTrend(null)}>
+                    <div className="w-full max-w-[500px] h-full bg-white/70 backdrop-blur-xl shadow-[-10px_0_40px_rgba(0,0,0,0.1)] p-12 overflow-y-auto relative" onClick={(e) => e.stopPropagation()}>
+                        <button className="absolute top-6 right-6 w-8 h-8 rounded-full flex items-center justify-center bg-bg-light border-none cursor-pointer text-[1.25rem] text-text-muted transition-all duration-200 hover:bg-brand-soft hover:text-brand-blue hover:rotate-90" onClick={() => setSelectedTrend(null)}>×</button>
 
-                        <div className={styles.detailHeader}>
-                            <div className={styles.detailTag}>#{selectedTrend.name}</div>
-                            <div className={styles.detailCount}>Identificato in {selectedTrend.count} post nel tuo feed</div>
+                        <div className="mb-10">
+                            <div className="text-[2.5rem] font-extrabold text-brand-blue tracking-[-0.05em] mb-2 font-display">#{selectedTrend.name}</div>
+                            <div className="text-base text-text-muted font-semibold font-body">Identificato in {selectedTrend.count} post nel tuo feed</div>
                         </div>
 
                         <div style={{ marginBottom: "2rem" }}>
                             <h3 style={{ fontSize: "0.9rem", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.1em", color: "var(--text-muted)", marginBottom: "1rem" }}>
                                 Menzioni Correlate
                             </h3>
-                            <div className={styles.mentionsSection}>
+                            <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-black/[0.06]">
                                 {(selectedTrend.mentions || []).length > 0 ? selectedTrend.mentions.map((m, i) => {
                                     let icon = "📝";
                                     if (m.type === "liked") icon = "❤️";
@@ -208,7 +207,7 @@ export default function TrendsPage() {
                                     if (m.type === "commented") icon = "💬";
 
                                     return (
-                                        <span key={i} className={styles.mentionPill}>
+                                        <span key={i} className="text-[0.75rem] font-bold text-text-muted bg-bg-light px-[0.7rem] py-[0.3rem] rounded-[20px] border border-black/[0.06] transition-all duration-200 hover:bg-brand-soft hover:text-brand-blue font-body">
                                             <span style={{ marginRight: "4px" }}>{icon}</span>
                                             {m.name || "Anonimo"}
                                         </span>
@@ -221,18 +220,18 @@ export default function TrendsPage() {
                             <h3 style={{ fontSize: "0.9rem", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.1em", color: "var(--text-muted)", marginBottom: "1rem" }}>
                                 Conversazioni Recenti
                             </h3>
-                            <div className={styles.postList}>
+                            <div className="flex flex-col gap-6">
                                 {(selectedTrend.posts || []).map((post, i) => (
-                                    <div key={i} className={styles.postCardDetails}>
-                                        <div className={styles.authorInfo}>
+                                    <div key={i} className="bg-white border border-black/[0.06] rounded-2xl p-6 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.02)] transition-transform duration-200 hover:-translate-y-0.5">
+                                        <div className="flex items-center gap-[0.85rem] mb-4">
                                             <img
                                                 src={post.authorAvatar || "https://www.google.com/url?sa=i&url=https%3A%2F%2Fwww.flaticon.com%2Ffree-icon%2Fuser_149071&psig=AOvVaw2yZ_Z-Z_Z-Z_Z-Z_Z-Z_Z&ust=1710000000000000&source=images&cd=vfe&opi=89978449&ved=0CBIQjRxqFwoTCIDP_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z"}
-                                                className={styles.avatarCircle}
+                                                className="w-10 h-10 rounded-full object-cover border-2 border-brand-soft"
                                                 alt={post.authorName}
                                             />
-                                            <div className={styles.authorNameMain}>{post.authorName}</div>
+                                            <div className="font-bold text-[0.9375rem] text-text-main font-body">{post.authorName}</div>
                                         </div>
-                                        <p className={styles.postSnippetText}>
+                                        <p className="text-[0.9375rem] text-text-main leading-relaxed mb-4 line-clamp-4 font-body">
                                             {post.text}
                                         </p>
                                         <a

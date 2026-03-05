@@ -39,6 +39,8 @@ func main() {
 	api := app.Group("/api", middleware.AuthRequired)
 	api.Get("/stats", handlers.GetStats)
 	api.Get("/stats/maturity", handlers.GetMaturity)
+	api.Get("/stats/streak", handlers.GetStreak)
+	api.Get("/posts/relevant", handlers.GetRelevantPosts)
 	api.Get("/trends", handlers.GetTrends)
 	api.Get("/activity", handlers.GetActivity)
 	api.Get("/bridge-targets", handlers.GetBridgeTargets)

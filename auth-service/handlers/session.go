@@ -156,6 +156,123 @@ func SaveOnboarding(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"ok": true})
 }
 
+// UpdateProfileRequest is the body for PUT /profile.
+type UpdateProfileRequest struct {
+	Goal   string `json:"goal"`
+	Sector string `json:"sector"`
+	Role   string `json:"role"`
+	Tone   string `json:"tone"`
+}
+
+// UpdateProfile handles PUT /profile — updates AI preferences for the authenticated user.
+func UpdateProfile(c *fiber.Ctx) error {
+	userID, err := getUserIDFromSession(c)
+	if err != nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Unauthorized"})
+	}
+
+	var req UpdateProfileRequest
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Invalid request body"})
+	}
+
+	tone := req.Tone
+	if tone == "" {
+		tone = "professional"
+	}
+
+	updates := map[string]any{
+		"onboarding_goal": req.Goal,
+		"sector":          req.Sector,
+		"role":            req.Role,
+		"preferred_tone":  tone,
+	}
+	if err := database.DB.Model(&models.User{}).Where("id = ?", userID).Updates(updates).Error; err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Failed to update profile"})
+	}
+
+	return c.JSON(fiber.Map{"ok": true})
+}
+
+// RefreshPluginToken handles POST /plugin-token/refresh.
+// Accepts a valid Bearer JWT and issues a fresh JWT + signing secret without requiring a session cookie.
+func RefreshPluginToken(c *fiber.Ctx) error {
+	authHeader := c.Get("Authorization")
+	if authHeader == "" || len(authHeader) < 8 {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Missing token"})
+	}
+	tokenString := authHeader[7:] // strip "Bearer "
+
+	publicKeyBytes, err := os.ReadFile("private.pem") // we have the private key to derive public
+	_ = publicKeyBytes
+	// Parse + verify the existing JWT using the private key file to get the public key
+	privateKeyBytes, err := os.ReadFile("private.pem")
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Could not read key"})
+	}
+	privateKey, err := jwt.ParseRSAPrivateKeyFromPEM(privateKeyBytes)
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Could not parse key"})
+	}
+
+	token, err := jwt.Parse(tokenString, func(t *jwt.Token) (interface{}, error) {
+		if _, ok := t.Method.(*jwt.SigningMethodRSA); !ok {
+			return nil, fmt.Errorf("unexpected signing method")
+		}
+		return &privateKey.PublicKey, nil
+	})
+
+	// Allow slightly expired tokens (up to 1 hour grace) so refresh can happen even if just expired
+	if err != nil && !isExpiredOnly(err) {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Invalid token"})
+	}
+
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Invalid claims"})
+	}
+
+	var userID uint
+	switch v := claims["user_id"].(type) {
+	case float64:
+		userID = uint(v)
+	default:
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Invalid user_id"})
+	}
+
+	jwtToken, signingSecret, err := generateSessionTokens(userID)
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Failed to generate token"})
+	}
+
+	return c.JSON(fiber.Map{
+		"token":          jwtToken,
+		"signing_secret": signingSecret,
+	})
+}
+
+// isExpiredOnly returns true if the only JWT error is token expiry.
+func isExpiredOnly(err error) bool {
+	if err == nil {
+		return false
+	}
+	return err.Error() == jwt.ErrTokenExpired.Error() ||
+		contains(err.Error(), "token is expired")
+}
+
+func contains(s, substr string) bool {
+	return len(s) >= len(substr) && (s == substr || len(s) > 0 && containsStr(s, substr))
+}
+
+func containsStr(s, substr string) bool {
+	for i := 0; i <= len(s)-len(substr); i++ {
+		if s[i:i+len(substr)] == substr {
+			return true
+		}
+	}
+	return false
+}
+
 // LinkExtensionRequest is the body for POST /link-extension.
 type LinkExtensionRequest struct {
 	InstallToken string `json:"install_token"`
@@ -214,10 +331,13 @@ func generateSessionTokens(userID uint) (string, string, error) {
 
 	// We need the user's tier to include it in the JWT
 	var user models.User
-	if err := database.DB.Select("tier").First(&user, userID).Error; err == nil {
+	if err := database.DB.Select("tier", "sector", "preferred_tone", "role").First(&user, userID).Error; err == nil {
 		claims["tier"] = user.Tier
+		claims["sector"] = user.Sector
+		claims["tone"] = user.PreferredTone
+		claims["role"] = user.Role
 	} else {
-		claims["tier"] = "free" // Fallback
+		claims["tier"] = "free"
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)

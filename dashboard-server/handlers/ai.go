@@ -52,6 +52,7 @@ type AIRequest struct {
 	TriggerData         interface{} `json:"triggerData,omitempty"`
 	Sector              string      `json:"sector,omitempty"`
 	AuthorDegree        string      `json:"authorDegree,omitempty"`
+	Tone                string      `json:"tone,omitempty"`
 }
 
 func callAnthropic(system string, userContent string) (string, error) {
@@ -136,6 +137,21 @@ func GenerateComment(c *fiber.Ctx) error {
 
 	userID := fmt.Sprint(c.Locals("user_id"))
 	tier, _ := c.Locals("tier").(string)
+
+	// Fall back to JWT claims if payload fields are empty
+	if req.Sector == "" {
+		if s, ok := c.Locals("sector").(string); ok {
+			req.Sector = s
+		}
+	}
+	if req.Tone == "" {
+		if t, ok := c.Locals("tone").(string); ok {
+			req.Tone = t
+		}
+		if req.Tone == "" {
+			req.Tone = "professional"
+		}
+	}
 
 	// Enforcement for Free tier
 	if tier == "" || tier == "free" {
@@ -311,6 +327,14 @@ func buildCommentPrompt(req AIRequest) string {
 	}
 	if req.AuthorDegree != "" {
 		text += fmt.Sprintf("\nGrado di connessione con l'autore del post: %s\n", req.AuthorDegree)
+	}
+	toneLabels := map[string]string{
+		"professional":   "professionale e autorevole",
+		"direct":         "diretto e conciso",
+		"conversational": "conversazionale e informale",
+	}
+	if label, ok := toneLabels[req.Tone]; ok {
+		text += fmt.Sprintf("\nTono richiesto per il commento: %s\n", label)
 	}
 
 	purposesStr, _ := json.Marshal(req.Purposes)

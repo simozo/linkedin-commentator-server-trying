@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import DashboardNav from "../components/DashboardNav";
-import styles from "../dashboard.module.css";
 
 const AUTH_URL = process.env.NEXT_PUBLIC_AUTH_URL || "http://localhost:4000";
 const AUTH_LOGIN_URL = process.env.NEXT_PUBLIC_AUTH_LOGIN_URL || "http://localhost:4000/login";
@@ -82,18 +81,18 @@ export default function ActivityPage() {
         <div style={{ minHeight: "100vh", background: "var(--bg-light)" }}>
             <DashboardNav userName={user?.full_name || user?.email} avatarUrl={user?.avatar_url} />
 
-            <main className={styles.container} style={{ maxWidth: 800 }}>
+            <main className="max-w-[1080px] mx-auto px-6 py-12 animate-fadeIn" style={{ maxWidth: 800 }}>
                 {/* Header */}
-                <header className={styles.header} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "2rem" }}>
+                <header className="mb-12" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "2rem" }}>
                     <div>
-                        <h1 className={styles.title} style={{ fontSize: "1.75rem", marginBottom: "0.25rem" }}>
+                        <h1 className="text-[2.25rem] font-bold text-text-main tracking-[-0.04em] mb-2 font-display" style={{ fontSize: "1.75rem", marginBottom: "0.25rem" }}>
                             Registro Attività
                         </h1>
-                        <p className={styles.subtitle}>
+                        <p className="text-base text-text-muted font-medium font-body">
                             Tutte le azioni registrate dal plugin su LinkedIn
                         </p>
                     </div>
-                    <Link href="/dashboard" className={styles.viewAll} style={{ background: "#fff", border: "1px solid var(--border-soft)", color: "var(--text-muted)" }}>
+                    <Link href="/dashboard" className="text-[0.875rem] font-semibold text-brand-blue no-underline px-4 py-2 bg-brand-soft rounded-lg transition-all duration-200 hover:bg-brand-blue/[0.12]" style={{ background: "#fff", border: "1px solid var(--border-soft)", color: "var(--text-muted)" }}>
                         ← Dashboard
                     </Link>
                 </header>
@@ -121,7 +120,7 @@ export default function ActivityPage() {
                 </div>
 
                 {/* List */}
-                <div className={styles.section} style={{ padding: 0, overflow: "hidden" }}>
+                <div className="bg-white border border-black/[0.06] rounded-[24px] p-8 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.02)]" style={{ padding: 0, overflow: "hidden" }}>
                     {filtered.length === 0 ? (
                         <div style={{ padding: "4rem 2rem", textAlign: "center", color: "var(--text-muted)", fontSize: "0.9rem" }}>
                             {items.length === 0
@@ -133,33 +132,33 @@ export default function ActivityPage() {
                             const color = actionColor[item.action] || "#64748b";
                             const label = actionLabel[item.action] || item.action;
                             return (
-                                <div key={i} className={styles.activityRow} style={{ padding: "1.25rem 1.5rem" }}>
-                                    <div className={styles.dot} style={{ background: color }} />
-                                    <div className={styles.activityContent}>
-                                        <div className={styles.activityMeta}>
-                                            <span className={styles.author}>{item.author_name || "—"}</span>
+                                <div key={i} className="flex items-start gap-4 py-5 border-b border-black/[0.04] last:border-0" style={{ padding: "1.25rem 1.5rem" }}>
+                                    <div className="w-2.5 h-2.5 rounded-full mt-1.5 flex-shrink-0" style={{ background: color }} />
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex items-center gap-3 mb-1">
+                                            <span className="font-bold text-[0.9375rem] text-text-main font-body">{item.author_name || "—"}</span>
                                             {item.author_slug && (
                                                 <a href={`https://linkedin.com/in/${item.author_slug}`} target="_blank" rel="noopener noreferrer"
                                                     style={{ fontSize: "0.75rem", color: "var(--accent-blue)", textDecoration: "none", fontWeight: 600, opacity: 0.8 }}>
                                                     /in/{item.author_slug}
                                                 </a>
                                             )}
-                                            <span className={styles.badge} style={{ color, background: `${color}12` }}>
+                                            <span className="text-[0.7rem] font-bold uppercase tracking-[0.05em] px-[0.6rem] py-[0.2rem] rounded-[6px] font-body" style={{ color, background: `${color}12` }}>
                                                 {label}
                                             </span>
                                         </div>
                                         {item.post_text && (
-                                            <div className={styles.snippet}>
+                                            <div className="text-[0.875rem] text-text-muted leading-relaxed font-body">
                                                 {item.post_text.slice(0, 160)}{item.post_text.length > 160 ? "…" : ""}
                                             </div>
                                         )}
                                     </div>
                                     <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "0.5rem", flexShrink: 0 }}>
-                                        <span className={styles.timestamp}>
+                                        <span className="text-[0.8125rem] font-semibold text-text-muted whitespace-nowrap font-body">
                                             {fmtDate(item.timestamp)}
                                         </span>
                                         {item.post_url && (
-                                            <a href={item.post_url} target="_blank" rel="noopener noreferrer" className={styles.viewAll} style={{
+                                            <a href={item.post_url} target="_blank" rel="noopener noreferrer" className="text-[0.875rem] font-semibold text-brand-blue no-underline px-4 py-2 bg-brand-soft rounded-lg transition-all duration-200 hover:bg-brand-blue/[0.12]" style={{
                                                 fontSize: "0.75rem", padding: "0.25rem 0.6rem", borderRadius: 6
                                             }}>
                                                 Apri post

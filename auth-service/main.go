@@ -32,7 +32,7 @@ func main() {
 	app.Use(cors.New(cors.Config{
 		AllowOrigins:     "http://localhost:3000,http://localhost:3003,http://localhost:4000,http://localhost:5001,http://localhost:3100",
 		AllowHeaders:     "Origin, Content-Type, Accept, Authorization",
-		AllowMethods:     "GET,POST,OPTIONS",
+		AllowMethods:     "GET,POST,PUT,OPTIONS",
 		AllowCredentials: true,
 	}))
 
@@ -52,8 +52,10 @@ func main() {
 	app.Get("/me", handlers.Me)
 	app.Post("/logout-web", handlers.LogoutWeb)
 	app.Post("/profile/onboarding", handlers.SaveOnboarding)
+	app.Put("/profile", handlers.UpdateProfile)
 	app.Post("/link-extension", handlers.LinkExtension)
 	app.Get("/plugin-token", handlers.GeneratePluginToken)
+	app.Post("/plugin-token/refresh", handlers.RefreshPluginToken)
 
 	// Start server
 	port := os.Getenv("PORT")

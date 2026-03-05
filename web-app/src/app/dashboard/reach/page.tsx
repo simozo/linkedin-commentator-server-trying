@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import DashboardNav from "../components/DashboardNav";
-import styles from "../dashboard.module.css";
 
 const AUTH_URL = process.env.NEXT_PUBLIC_AUTH_URL || "http://localhost:4000";
 const AUTH_LOGIN_URL = process.env.NEXT_PUBLIC_AUTH_LOGIN_URL || "http://localhost:4000/login";
@@ -71,30 +70,30 @@ export default function ReachPage() {
         <div style={{ minHeight: "100vh", background: "var(--bg-light)" }}>
             <DashboardNav userName={user?.full_name || user?.email} avatarUrl={user?.avatar_url} />
 
-            <main className={styles.container}>
+            <main className="max-w-[1080px] mx-auto px-6 py-12 animate-fadeIn">
                 {/* Header */}
-                <header className={styles.header}>
+                <header className="mb-12">
                     <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
                         <div>
-                            <h1 className={styles.title}>
+                            <h1 className="text-[2.25rem] font-bold text-text-main tracking-[-0.04em] mb-2 font-display">
                                 🌉 Warm Reach Map
                             </h1>
-                            <p className={styles.subtitle} style={{ maxWidth: 520 }}>
+                            <p className="text-base text-text-muted font-medium font-body" style={{ maxWidth: 520 }}>
                                 Persone che puoi raggiungere in modo caldo attraverso co-commenters condivisi.
                                 Clicca su un target per vedere il percorso completo e generare un commento bridge.
                             </p>
                         </div>
-                        <Link href="/dashboard" className={styles.viewAll} style={{ background: "#fff", border: "1px solid var(--border-soft)", color: "var(--text-muted)" }}>
+                        <Link href="/dashboard" className="text-[0.875rem] font-semibold text-brand-blue no-underline px-4 py-2 bg-brand-soft rounded-lg transition-all duration-200 hover:bg-brand-blue/[0.12]" style={{ background: "#fff", border: "1px solid var(--border-soft)", color: "var(--text-muted)" }}>
                             ← Dashboard
                         </Link>
                     </div>
                 </header>
 
                 {bridges.length === 0 ? (
-                    <div className={styles.section} style={{ padding: "4rem 2rem", textAlign: "center" }}>
+                    <div className="bg-white border border-black/[0.06] rounded-[24px] p-8 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.02)]" style={{ padding: "4rem 2rem", textAlign: "center" }}>
                         <div style={{ fontSize: "3rem", marginBottom: "1.5rem" }}>🌱</div>
-                        <h2 className={styles.sectionTitle} style={{ marginBottom: "1rem" }}>Il grafo si sta costruendo</h2>
-                        <p className={styles.snippet} style={{ maxWidth: 400, margin: "0 auto" }}>
+                        <h2 className="text-[1.25rem] font-bold text-text-main font-display" style={{ marginBottom: "1rem" }}>Il grafo si sta costruendo</h2>
+                        <p className="text-[0.875rem] text-text-muted leading-relaxed font-body" style={{ maxWidth: 400, margin: "0 auto" }}>
                             Continua a usare il plugin su LinkedIn. Man mano che il Co-pilot analizza post e co-commenters,
                             la mappa si arricchirà di percorsi bridge.
                         </p>
@@ -108,26 +107,26 @@ export default function ReachPage() {
                                 const isSelected = selected?.target_slug === t.target_slug;
                                 const color = strengthColor(t.path_strength);
                                 return (
-                                    <button key={i} onClick={() => setSelected(isSelected ? null : t)} className={styles.bridgeCard} style={{
+                                    <button key={i} onClick={() => setSelected(isSelected ? null : t)} className="bg-bg-light border border-black/[0.06] rounded-md p-5 transition-all duration-200 mb-4 hover:border-brand-blue hover:bg-white" style={{
                                         border: isSelected ? "1px solid var(--accent-blue)" : "1px solid var(--border-soft)",
                                         boxShadow: isSelected ? "0 8px 20px rgba(37, 99, 235, 0.1)" : "none",
                                         transform: isSelected ? "translateY(-4px)" : "none",
                                         width: "100%",
                                         background: isSelected ? "#fff" : "var(--glass-white)"
                                     }}>
-                                        <div className={styles.bridgeTarget}>
-                                            <span className={styles.targetName}>
+                                        <div className="flex justify-between items-center mb-2">
+                                            <span className="font-bold text-base text-text-main font-body">
                                                 {t.target_name || t.target_slug || "—"}
                                             </span>
-                                            <span className={styles.badge} style={{ color, background: `${color}12` }}>
+                                            <span className="text-[0.7rem] font-bold uppercase tracking-[0.05em] px-[0.6rem] py-[0.2rem] rounded-[6px] font-body" style={{ color, background: `${color}12` }}>
                                                 forza {t.path_strength}
                                             </span>
                                         </div>
-                                        <div className={styles.bridgePath}>
+                                        <div className="text-[0.8125rem] text-text-muted font-body">
                                             🌉 via <strong>{t.bridge_name || t.bridge_slug}</strong>
                                         </div>
                                         {t.post_text && (
-                                            <div className={styles.snippet} style={{ marginTop: "0.75rem", fontStyle: "italic" }}>
+                                            <div className="text-[0.875rem] text-text-muted leading-relaxed font-body" style={{ marginTop: "0.75rem", fontStyle: "italic" }}>
                                                 "{t.post_text.slice(0, 90)}..."
                                             </div>
                                         )}
@@ -139,9 +138,9 @@ export default function ReachPage() {
                         {/* Detail panel */}
                         {selected && (
                             <aside style={{ alignSelf: "start", position: "sticky", top: "100px" }}>
-                                <div className={styles.section} style={{ border: "1px solid var(--accent-soft)", boxShadow: "0 10px 30px rgba(0,0,0,0.05)" }}>
+                                <div className="bg-white border border-black/[0.06] rounded-[24px] p-8 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.02)]" style={{ border: "1px solid var(--accent-soft)", boxShadow: "0 10px 30px rgba(0,0,0,0.05)" }}>
                                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "1.5rem" }}>
-                                        <h3 className={styles.sectionTitle} style={{ fontSize: "1.1rem" }}>Percorso Bridge</h3>
+                                        <h3 className="text-[1.25rem] font-bold text-text-main font-display" style={{ fontSize: "1.1rem" }}>Percorso Bridge</h3>
                                         <button onClick={() => setSelected(null)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-muted)", fontSize: "1.25rem", padding: 0 }}>✕</button>
                                     </div>
 
@@ -153,16 +152,16 @@ export default function ReachPage() {
                                             </div>
                                             <div>
                                                 <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: 600 }}>Tu</div>
-                                                <div className={styles.author}>{user?.full_name || user?.email}</div>
+                                                <div className="font-bold text-[0.9375rem] text-text-main font-body">{user?.full_name || user?.email}</div>
                                             </div>
                                         </div>
 
                                         <div style={{ paddingLeft: 19, borderLeft: "2px dashed var(--border-soft)", marginLeft: 19, padding: "0.5rem 0 0.5rem 1.5rem" }}>
-                                            <div className={styles.snippet} style={{ fontSize: "0.75rem" }}>
+                                            <div className="text-[0.875rem] text-text-muted leading-relaxed font-body" style={{ fontSize: "0.75rem" }}>
                                                 entrambi commentate su:
                                             </div>
                                             {selected.post_text && (
-                                                <div className={styles.snippet} style={{ marginTop: "0.25rem", color: "var(--text-main)" }}>
+                                                <div className="text-[0.875rem] text-text-muted leading-relaxed font-body" style={{ marginTop: "0.25rem", color: "var(--text-main)" }}>
                                                     "{selected.post_text.slice(0, 100)}…"
                                                 </div>
                                             )}
@@ -174,7 +173,7 @@ export default function ReachPage() {
                                             </div>
                                             <div>
                                                 <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: 600 }}>Bridge Person</div>
-                                                <div className={styles.author}>{selected.bridge_name || selected.bridge_slug}</div>
+                                                <div className="font-bold text-[0.9375rem] text-text-main font-body">{selected.bridge_name || selected.bridge_slug}</div>
                                                 {selected.bridge_slug && (
                                                     <a href={`https://linkedin.com/in/${selected.bridge_slug}`} target="_blank" rel="noopener noreferrer"
                                                         style={{ fontSize: "0.75rem", color: "var(--accent-blue)", textDecoration: "none", fontWeight: 600 }}>
@@ -185,7 +184,7 @@ export default function ReachPage() {
                                         </div>
 
                                         <div style={{ paddingLeft: 19, borderLeft: "2px dashed var(--border-soft)", marginLeft: 19, padding: "0.5rem 0 0.5rem 1.5rem" }}>
-                                            <div className={styles.snippet} style={{ fontSize: "0.75rem" }}>
+                                            <div className="text-[0.875rem] text-text-muted leading-relaxed font-body" style={{ fontSize: "0.75rem" }}>
                                                 ha commentato insieme a:
                                             </div>
                                         </div>
@@ -196,7 +195,7 @@ export default function ReachPage() {
                                             </div>
                                             <div>
                                                 <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: 600 }}>Target</div>
-                                                <div className={styles.author} style={{ fontSize: "1rem" }}>{selected.target_name || selected.target_slug}</div>
+                                                <div className="font-bold text-[0.9375rem] text-text-main font-body" style={{ fontSize: "1rem" }}>{selected.target_name || selected.target_slug}</div>
                                                 {selected.target_slug && (
                                                     <a href={`https://linkedin.com/in/${selected.target_slug}`} target="_blank" rel="noopener noreferrer"
                                                         style={{ fontSize: "0.75rem", color: "var(--accent-blue)", textDecoration: "none", fontWeight: 600 }}>

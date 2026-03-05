@@ -2,7 +2,6 @@
 
 import { useEffect, useState, useCallback } from "react";
 import DashboardNav from "../components/DashboardNav";
-import styles from "../dashboard.module.css";
 import Link from "next/link";
 
 const AUTH_URL = process.env.NEXT_PUBLIC_AUTH_URL || "http://localhost:4000";
@@ -315,32 +314,32 @@ export default function NetworkPage() {
         <div style={{ minHeight: "100vh", background: "var(--bg-light)" }}>
             <DashboardNav userName={user.full_name || user.email} avatarUrl={user.avatar_url} />
 
-            <main className={styles.container}>
-                <header className={styles.header}>
+            <main className="max-w-[1080px] mx-auto px-6 py-12 animate-fadeIn">
+                <header className="mb-12">
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                         <div>
-                            <h1 className={styles.title}>Relationship Intelligence</h1>
-                            <p className={styles.subtitle}>
+                            <h1 className="text-[2.25rem] font-bold text-text-main tracking-[-0.04em] mb-2 font-display">Relationship Intelligence</h1>
+                            <p className="text-base text-text-muted font-medium font-body">
                                 {total} connessioni · {gatewayContacts.length} gateway attivi · {topicLeaders.length} topic leader identificati
                             </p>
                         </div>
-                        <Link href="/dashboard" className={styles.viewAll} style={{ background: "#fff", border: "1px solid var(--border-soft)", color: "var(--text-muted)" }}>
+                        <Link href="/dashboard" className="text-[0.875rem] font-semibold text-brand-blue no-underline px-4 py-2 bg-brand-soft rounded-lg transition-all duration-200 hover:bg-brand-blue/[0.12]" style={{ background: "#fff", border: "1px solid var(--border-soft)", color: "var(--text-muted)" }}>
                             ← Dashboard
                         </Link>
                     </div>
                 </header>
 
                 {/* Section 1: Contatti Gateway */}
-                <div className={styles.section} style={{ marginBottom: "2rem" }}>
-                    <div className={styles.sectionHeader}>
+                <div className="bg-white border border-black/[0.06] rounded-[24px] p-8 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.02)]" style={{ marginBottom: "2rem" }}>
+                    <div className="flex justify-between items-center mb-6">
                         <div>
-                            <h2 className={styles.sectionTitle}>🌉 Contatti Gateway</h2>
-                            <p className={styles.snippet} style={{ marginTop: 4 }}>
+                            <h2 className="text-[1.25rem] font-bold text-text-main font-display">🌉 Contatti Gateway</h2>
+                            <p className="text-[0.875rem] text-text-muted leading-relaxed font-body" style={{ marginTop: 4 }}>
                                 Le persone che sblocca più target raggiungibili. Investi tempo su di loro.
                             </p>
                         </div>
                         {gatewayContacts.length > 0 && (
-                            <span className={styles.viewAll}>{gatewayContacts.length} bridge</span>
+                            <span className="text-[0.875rem] font-semibold text-brand-blue no-underline px-4 py-2 bg-brand-soft rounded-lg transition-all duration-200 hover:bg-brand-blue/[0.12]">{gatewayContacts.length} bridge</span>
                         )}
                     </div>
 
@@ -364,16 +363,16 @@ export default function NetworkPage() {
                 </div>
 
                 {/* Section 2: Topic Leaders */}
-                <div className={styles.section} style={{ marginBottom: "2rem" }}>
-                    <div className={styles.sectionHeader}>
+                <div className="bg-white border border-black/[0.06] rounded-[24px] p-8 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.02)]" style={{ marginBottom: "2rem" }}>
+                    <div className="flex justify-between items-center mb-6">
                         <div>
-                            <h2 className={styles.sectionTitle}>✍️ Topic Leader</h2>
-                            <p className={styles.snippet} style={{ marginTop: 4 }}>
+                            <h2 className="text-[1.25rem] font-bold text-text-main font-display">✍️ Topic Leader</h2>
+                            <p className="text-[0.875rem] text-text-muted leading-relaxed font-body" style={{ marginTop: 4 }}>
                                 Chi guida le conversazioni nei topic del tuo feed. Commentare i loro post ti posiziona.
                             </p>
                         </div>
                         {topicLeaders.length > 0 && (
-                            <span className={styles.viewAll}>{topicLeaders.length} profili</span>
+                            <span className="text-[0.875rem] font-semibold text-brand-blue no-underline px-4 py-2 bg-brand-soft rounded-lg transition-all duration-200 hover:bg-brand-blue/[0.12]">{topicLeaders.length} profili</span>
                         )}
                     </div>
 
@@ -393,11 +392,11 @@ export default function NetworkPage() {
                 </div>
 
                 {/* Section 3: two-column — Connections + Insights/Alleati */}
-                <div className={styles.mainGrid}>
+                <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_0.8fr] gap-8">
                     {/* Connections list */}
-                    <div className={styles.section} style={{ padding: 0 }}>
+                    <div className="bg-white border border-black/[0.06] rounded-[24px] p-8 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.02)]" style={{ padding: 0 }}>
                         <div style={{ padding: "1.5rem 2rem", borderBottom: "1px solid var(--border-soft)" }}>
-                            <h2 className={styles.sectionTitle}>Connessioni Recenti</h2>
+                            <h2 className="text-[1.25rem] font-bold text-text-main font-display">Connessioni Recenti</h2>
                         </div>
                         <div>
                             {connections.length === 0 ? (
@@ -406,20 +405,20 @@ export default function NetworkPage() {
                                 </p>
                             ) : (
                                 connections.map((c, i) => (
-                                    <div key={i} className={styles.activityRow} style={{ padding: "1.25rem 2rem" }}>
+                                    <div key={i} className="flex items-start gap-4 py-5 border-b border-black/[0.04] last:border-0" style={{ padding: "1.25rem 2rem" }}>
                                         <div style={{ flex: 1 }}>
                                             <a
                                                 href={`https://www.linkedin.com/in/${c.slug}`}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
-                                                className={styles.author}
+                                                className="font-bold text-[0.9375rem] text-text-main font-body"
                                                 style={{ textDecoration: "none" }}
                                             >
                                                 {c.name}
                                             </a>
-                                            <div className={styles.snippet} style={{ maxWidth: "100%" }}>{c.headline}</div>
+                                            <div className="text-[0.875rem] text-text-muted leading-relaxed font-body" style={{ maxWidth: "100%" }}>{c.headline}</div>
                                         </div>
-                                        <div className={styles.timestamp}>{c.connected_at}</div>
+                                        <div className="text-[0.8125rem] font-semibold text-text-muted whitespace-nowrap font-body">{c.connected_at}</div>
                                     </div>
                                 ))
                             )}
@@ -429,9 +428,9 @@ export default function NetworkPage() {
                     {/* Right column */}
                     <aside style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
                         {/* Network Insights */}
-                        <div className={styles.section}>
-                            <h2 className={styles.sectionTitle} style={{ marginBottom: "1rem" }}>Composizione Network</h2>
-                            <p className={styles.snippet} style={{ marginBottom: "1.5rem" }}>
+                        <div className="bg-white border border-black/[0.06] rounded-[24px] p-8 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.02)]">
+                            <h2 className="text-[1.25rem] font-bold text-text-main font-display" style={{ marginBottom: "1rem" }}>Composizione Network</h2>
+                            <p className="text-[0.875rem] text-text-muted leading-relaxed font-body" style={{ marginBottom: "1.5rem" }}>
                                 Distribuzione dei ruoli nelle headline dei tuoi contatti.
                             </p>
                             <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
@@ -459,9 +458,9 @@ export default function NetworkPage() {
                         </div>
 
                         {/* Alleati */}
-                        <div className={styles.section}>
-                            <h2 className={styles.sectionTitle} style={{ marginBottom: "1rem" }}>🤝 Alleati</h2>
-                            <p className={styles.snippet} style={{ marginBottom: "1.5rem" }}>
+                        <div className="bg-white border border-black/[0.06] rounded-[24px] p-8 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.02)]">
+                            <h2 className="text-[1.25rem] font-bold text-text-main font-display" style={{ marginBottom: "1rem" }}>🤝 Alleati</h2>
+                            <p className="text-[0.875rem] text-text-muted leading-relaxed font-body" style={{ marginBottom: "1.5rem" }}>
                                 Commentano gli stessi post che analizzi tu. Potenziali amplificatori.
                             </p>
                             <div style={{ display: "flex", flexDirection: "column" }}>
@@ -480,12 +479,12 @@ export default function NetworkPage() {
                                                 href={`https://www.linkedin.com/in/${o.slug}`}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
-                                                className={styles.author}
+                                                className="font-bold text-[0.9375rem] text-text-main font-body"
                                                 style={{ fontSize: "0.875rem", textDecoration: "none" }}
                                             >
                                                 {o.name}
                                             </a>
-                                            <span className={styles.badge} style={{ color: "#10b981", background: "rgba(16, 185, 129, 0.08)" }}>
+                                            <span className="text-[0.7rem] font-bold uppercase tracking-[0.05em] px-[0.6rem] py-[0.2rem] rounded-[6px] font-body" style={{ color: "#10b981", background: "rgba(16, 185, 129, 0.08)" }}>
                                                 {o.overlap_count} post
                                             </span>
                                         </div>

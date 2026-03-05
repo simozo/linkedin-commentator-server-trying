@@ -64,6 +64,16 @@ func AuthRequired(c *fiber.Ctx) error {
 						} else {
 							c.Locals("tier", "free")
 						}
+						// Extract user profile fields from JWT
+						if sector, ok := claims["sector"].(string); ok {
+							c.Locals("sector", sector)
+						}
+						if tone, ok := claims["tone"].(string); ok {
+							c.Locals("tone", tone)
+						}
+						if role, ok := claims["role"].(string); ok {
+							c.Locals("role", role)
+						}
 						return c.Next()
 					}
 				}
